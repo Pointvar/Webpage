@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'wf(x6)2$a+$)a%u!z#sjk8so^4-p)nbsu=3lu$(3fmt2n+gfuw'
+SECRET_KEY = 'lpqj@xji#e)%-6vj9cjhc0&5+5v6bor)x_=s5dtdvmo$@!=e21'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -75,8 +75,13 @@ WSGI_APPLICATION = 'compass.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'znz_web',
+        'USER': 'root',
+        'PASSWORD': 'znzops',
+        'HOST': 'localhost',
+        'PORT': '3306',
+
     }
 }
 
