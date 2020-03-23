@@ -15,7 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from compass_warp.view.main import view as main_view
+from compass_warp.view.main import ajax_view as main_ajax_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('hello', main_view.hello),
+    path('ajax_hello', main_ajax_view.ajax_hello)
 ]

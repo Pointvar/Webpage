@@ -9,7 +9,8 @@ def process_main(env_type):
     dst_url = 'compass_warp/compass/settings.py'
     org_path = os.path.join(base_path, org_url)
     dst_path = os.path.join(base_path, dst_url)
-    os.remove(dst_path)
+    if os.path.exists(dst_path):
+       os.remove(dst_path)
     os.symlink(org_path, dst_path)
 
 if __name__ == "__main__":
