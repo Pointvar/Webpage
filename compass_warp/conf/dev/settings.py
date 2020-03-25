@@ -12,11 +12,14 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import sys
+import socket
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(BASE_DIR))
+
+hostname = socket.gethostname()
 
 
 # Quick-start development settings - unsuitable for production
@@ -26,7 +29,7 @@ sys.path.append(os.path.dirname(BASE_DIR))
 SECRET_KEY = 'lpqj@xji#e)%-6vj9cjhc0&5+5v6bor)x_=s5dtdvmo$@!=e21'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['www.safari.com']
 
@@ -85,6 +88,35 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '3306',
 
+    }
+}
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s %(levelname)s {hostname} %(name)s %(funcName)s:%(lineno)d %(message)s'.format(hostname=hostname)
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': '/alidata1/logs/dev/compass_liuqi.log',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        }
+    },
+    'root':{
+        'handlers':['file', 'console'],
+        'level':'DEBUG',
+        'propagate':True,
     }
 }
 
