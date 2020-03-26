@@ -1,2 +1,3 @@
 *.pyc
 compass_warp/compass/settings.py
+.vscode
