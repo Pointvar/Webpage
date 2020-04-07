@@ -1,7 +1,6 @@
-from django.http import HttpResponse
-from datetime import datetime
+from django.shortcuts import render
 import logging
 
+
 def handler404(request, exception):
-    html = "{except_msg}".format(except_msg=str(exception))
-    return HttpResponse(html)
+    return render(request, "404.html", {"except_msg": str(exception)})

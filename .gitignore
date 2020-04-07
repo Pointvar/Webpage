@@ -1,3 +1,4 @@
 *.pyc
 compass_warp/compass/settings.py
+compass_warp/client/node_modules/
 .vscode

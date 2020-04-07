@@ -108,11 +108,7 @@ LOGGING = {
             "formatter": "verbose",
             "filename": "/alidata1/logs/dev/compass_liuqi.log",
         },
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-        },
+        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "verbose",},
     },
     "root": {"handlers": ["file", "console"], "level": "DEBUG", "propagate": True},
 }
@@ -122,9 +118,7 @@ LOGGING = {
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
