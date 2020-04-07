@@ -1,2 +1,2 @@
 var dom = document.getElementById("root");
-dom.appendChild("<li>sss</li>");
+dom.innerHTML = "<li>sss</li>";
