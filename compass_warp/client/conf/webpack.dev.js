@@ -9,17 +9,17 @@ const DevConfig = merger(baseConfig, {
   output: {
     path: Path.resolve(context, "../static/dist_dev"),
     filename: "js/[name].js",
-    publicPath: "static/dist_dev"
+    publicPath: "static/dist_dev",
   },
   module: {
     rules: [
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loaders: ["babel-loader", "eslint-loader"]
-      }
-    ]
-  }
+        loaders: ["babel-loader", "eslint-loader"],
+      },
+    ],
+  },
 });
 
 module.exports = DevConfig;
