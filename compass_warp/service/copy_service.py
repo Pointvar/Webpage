@@ -8,6 +8,8 @@ if __name__ == "__main__":
 from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 import re
 import json
+import math
+import requests
 from bs4 import BeautifulSoup
 from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
 from pdd_models.get_pdd_goods_spec import GetPddGoodsSpec
@@ -99,6 +101,7 @@ from pdd_models.upload_pdd_goods_image import UploadPddGoodsImage
 class CopyService:
     h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D&type=json"
     h5_desc_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdesc/6.0/?data=%7B%22id%22%3A%22{0}%22%2C%22type%22%3A%221%22%2C+%22f%22%3A%22%22%7D"
+    pc_1688_search_api = "https://search.1688.com/service/marketOfferResultViewService"
 
     def __init__(self, sid, nick, platform, soft_name, source):
         self.sid = sid
@@ -153,6 +156,48 @@ class CopyService:
         # 使用HTTP代理获取html
         spider_infos = ProxyClient.Execute(spider_urls, spider_type, source)
         return spider_infos
+
+    def get_alibaba_search_pc_api(self, keyword, sort_key, desc_order, src_page_no, price_start=None, price_end=None):
+        # 1688接口设计 一页60个商品需分3批获取
+        page_no = int(math.ceil(src_page_no / 3))
+        index = src_page_no % 3
+        index = index - 1 if index else 2
+        start_index = index * 20
+        search_dict = dict(
+            keywords=keyword.encode("gb18030"),
+            asyncCount=20,
+            pageSize=60,
+            encode="utf-8",
+            uniqfield="userid",
+            sortType=sort_key,
+            startIndex=start_index,
+            descendOrder=desc_order,
+            beginPage=page_no,
+        )
+        search_dict["async"] = True
+        if price_start:
+            search_dict.update(priceStart=price_start)
+        if price_end:
+            search_dict.update(priceEnd=price_end)
+
+        search_api = requests.Request("GET", self.pc_1688_search_api, params=search_dict).prepare().url
+        print(search_api)
+        search_html = self.get_spider_infos_by_proxy([search_api], "alibaba_pc_search", self.source)[search_api]
+        return search_html
+
+    def parse_alibaba_search_pc_html(self, search_html):
+        item_infos = []
+        search_json = json.loads(search_html)["data"]["data"]
+        offer_list, page_amount = [search_json[key] for key in ["offerList", "pageCount"]]
+        for offer in offer_list:
+            main_img = offer["image"]["imgUrl"]
+            num_iid = offer["id"]
+            title = offer["information"]["simpleSubject"]
+            price = offer["tradePrice"]["offerPrice"]["valueString"]
+            print(title)
+            item_info = dict(main_img=main_img, title=title, price=price, num_iid=num_iid)
+            item_infos.append(item_info)
+        return item_infos
 
     def get_taobao_wx_apis(self, item_ids):
         # 获取无线淘宝的数据接口
@@ -266,6 +311,7 @@ class CopyService:
         return self.pdd_add_item.add_pdd_goods(item_submit)
 
 
+# 测试用例
 def taobao_pdd_test(item_id):
     copy_obj = CopyService("1", "2", "3", "4", "test")
     item_htmls, desc_htmls = copy_obj.get_taobao_wx_apis([item_id])
@@ -279,5 +325,12 @@ def taobao_pdd_test(item_id):
     print("commit_id:{0}, goods_id: {1}".format(commit_id, goods_id))
 
 
+def alibaba_search_test(keyword, sort_key, desc_order):
+    copy_obj = CopyService("1", "2", "3", "4", "test")
+    search_html = copy_obj.get_alibaba_search_pc_api(keyword, sort_key, desc_order, 4)
+    copy_obj.parse_alibaba_search_pc_html(search_html)
+
+
 if __name__ == "__main__":
-    taobao_pdd_test(595183899574)
+    #taobao_pdd_test(595183899574)
+    #alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
