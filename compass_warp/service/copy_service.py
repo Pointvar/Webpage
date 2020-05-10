@@ -10,6 +10,7 @@ import re
 import json
 import math
 import requests
+from furl import furl
 from bs4 import BeautifulSoup
 from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
 from pdd_models.get_pdd_goods_spec import GetPddGoodsSpec
@@ -102,6 +103,8 @@ class CopyService:
     h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D&type=json"
     h5_desc_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdesc/6.0/?data=%7B%22id%22%3A%22{0}%22%2C%22type%22%3A%221%22%2C+%22f%22%3A%22%22%7D"
     pc_1688_search_api = "https://search.1688.com/service/marketOfferResultViewService"
+    wx_1688_shop_items_api = "https://winport.m.1688.com/winport/asyncView"
+    wx_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
     def __init__(self, sid, nick, platform, soft_name, source):
         self.sid = sid
@@ -196,6 +199,39 @@ class CopyService:
             price = offer["tradePrice"]["offerPrice"]["valueString"]
             print(title)
             item_info = dict(main_img=main_img, title=title, price=price, num_iid=num_iid)
+            item_infos.append(item_info)
+        return item_infos
+
+    def get_member_id_by_shop_url(self, shop_url):
+        headers = {"user-agent": self.wx_user_agent}
+        params = dict(no_cache="true")
+        response = requests.get(shop_url, params=params, headers=headers, timeout=5, allow_redirects=False)
+        location = response.headers["Location"]
+        parse_dict = furl(location)
+        member_id = parse_dict.args["memberId"]
+        return member_id
+
+    def get_alibaba_shop_items_wx_api(self, member_id, sort_type, page_no):
+        search_dict = dict(
+            memberId=member_id, sortType=sort_type, pageIndex=page_no, style="list", _async_id="offerlist:offers"
+        )
+        search_api = requests.Request("GET", self.wx_1688_shop_items_api, params=search_dict).prepare().url
+        print(search_api)
+        search_html = self.get_spider_infos_by_proxy([search_api], "alibaba_wx_shop_items", self.source)[search_api]
+        return search_html
+
+    def parse_alibaba_shop_items_wx_html(self, search_html):
+        spider_html = json.loads(search_html)["content"]
+        soup = BeautifulSoup(spider_html, "lxml")
+        item_doms = soup.find_all(attrs={"class": "item item-"})
+        item_infos = []
+        for item_dom in item_doms:
+            item_url = item_dom.select_one("a").attrs["href"]
+            main_pic = item_dom.select_one(".item-image > img").attrs["src"]
+            title = item_dom.select_one(".item-title > div > p").string
+            sale = item_dom.select_one(".item-booked > span").string
+            price = item_dom.select(".item-price > div > div > span")[1].string
+            item_info = dict(item_url=item_url, main_pic=main_pic, title=title, sale=sale, price=price)
             item_infos.append(item_info)
         return item_infos
 
@@ -331,6 +367,16 @@ def alibaba_search_test(keyword, sort_key, desc_order):
     copy_obj.parse_alibaba_search_pc_html(search_html)
 
 
+def alibaba_shop_items_test(shop_url):
+    copy_obj = CopyService("1", "2", "3", "4", "test")
+    member_id = copy_obj.get_member_id_by_shop_url(shop_url)
+    # tradenumdown,wangpu_score,pricedown
+    search_html = copy_obj.get_alibaba_shop_items_wx_api(member_id, "tradenumdown", 1)
+    item_infos = copy_obj.parse_alibaba_shop_items_wx_html(search_html)
+    print(item_infos)
+
+
 if __name__ == "__main__":
-    #taobao_pdd_test(595183899574)
-    #alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
+    # taobao_pdd_test(595183899574)
+    # alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
+    alibaba_shop_items_test("https://qiyilianmd.1688.com/")
