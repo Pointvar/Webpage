@@ -9,8 +9,10 @@ from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 import re
 import json
 import math
+import hashlib
 import requests
 from furl import furl
+from random import randint
 from bs4 import BeautifulSoup
 from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
 from pdd_models.get_pdd_goods_spec import GetPddGoodsSpec
@@ -103,6 +105,8 @@ class CopyService:
     h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D&type=json"
     h5_desc_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdesc/6.0/?data=%7B%22id%22%3A%22{0}%22%2C%22type%22%3A%221%22%2C+%22f%22%3A%22%22%7D"
     pc_1688_search_api = "https://search.1688.com/service/marketOfferResultViewService"
+    pc_1688_item_api = "https://detail.1688.com/offer/{0}.html"
+    pc_1688_video_api = "https://cloud.video.taobao.com/play/u/{0}/p/2/e/6/t/1/{1}.mp4"
     wx_1688_shop_items_api = "https://winport.m.1688.com/winport/asyncView"
     wx_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
@@ -234,6 +238,76 @@ class CopyService:
             item_info = dict(item_url=item_url, main_pic=main_pic, title=title, sale=sale, price=price)
             item_infos.append(item_info)
         return item_infos
+
+    def get_alibaba_item_pc_api(self, item_id):
+        item_url = self.pc_1688_item_api.format(item_id)
+        click_id = hashlib.md5(str(randint(0, 999999999999)).encode("utf-8")).hexdigest()
+        session_id = hashlib.md5(str(randint(0, 999999999999)).encode("utf-8")).hexdigest()
+        item_dict = dict(clickid=click_id, sessionid=session_id)
+        item_api = requests.Request("GET", item_url, params=item_dict).prepare().url
+        print(item_api)
+        item_html = self.get_spider_infos_by_proxy([item_api], "alibaba_pc_item", self.source)[item_api]
+        return item_html
+
+    def parse_alibaba_item_pc_html(self, item_html, ops_type):
+        if ops_type == "video_crawler":
+            video_id, user_id = list(map(int, re.findall(r'"videoId":"(.*?)","userId":"(.*?)"', item_html)[0]))
+            video_url = self.pc_1688_video_api.format(user_id, video_id)
+            item_info = dict(video_url=video_url)
+            return item_info
+        # 基本信息解析
+        soup = BeautifulSoup(item_html, "lxml")
+        title = soup.select_one("#mod-detail-title > h1").string
+        main_doms = soup.select("#dt-tab > .tab-content-container > ul > li")
+        main_pics = list(map(lambda x: x.select_one(".vertical-img > a > img").attrs["src"], main_doms))
+        pre_sku_props = json.loads(re.findall(r"skuProps:(.*)(?=,)", item_html)[0])
+        pre_sku_maps = json.loads(re.findall(r"skuMap:(.*)(?=,)", item_html)[0])
+        price_range = re.findall(r"""price:"(.*)(?=\")""", item_html)[0]
+
+        base_prop_doms = soup.select("#mod-detail-attributes > div > table > tbody > tr")
+        base_props = []
+        for base_prop_dom in base_prop_doms:
+            features = list(map(lambda x: x.string, base_prop_dom.select(".de-feature")))
+            values = list(map(lambda x: x.string, base_prop_dom.select(".de-value")))
+            base_prop = map(lambda x: dict([x]), zip(features, values))
+            base_props.extend(base_prop)
+
+        sku_props = []
+        for pre_sku_prop in pre_sku_props:
+            prop_name, prop_values = [pre_sku_prop[key] for key in ["prop", "value"]]
+            pid = hashlib.md5(prop_name.encode("utf-8")).hexdigest()
+            values = []
+            for prop_value in prop_values:
+                value_name = prop_value["name"]
+                vid = hashlib.md5(value_name.encode("utf-8")).hexdigest()
+                values.append(dict(vid=vid, name=value_name))
+            sku_props.append(dict(pid=pid, name=prop_name, values=values))
+
+        sku_infos = []
+        for prop_name, prop_value in pre_sku_maps.items():
+            prop_path = ":".join(
+                list(map(lambda x: hashlib.md5(x.encode("utf-8")).hexdigest(), prop_name.split("&gt;")))
+            )
+            sku_id, sku_quantity, sku_price = [prop_value[key] for key in ["skuId", "canBookCount", "discountPrice"]]
+            sku_price = float(sku_price) * 100
+            sku_infos.append(dict(skuId=sku_id, propPath=prop_path, sku_quantity=sku_quantity, sku_price=sku_price))
+
+        item_price = float(price_range.split("-")[1]) * 100
+        pre_category_info = json.loads(re.findall(r"""(?<=categoryList":).*(?<=])""", item_html)[0])
+        category_id, category_name = [pre_category_info[-1][key] for key in ["id", "name"]]
+        root_category_id = pre_category_info[-2]["id"]
+        # 解析详情页
+        desc_api = soup.find(attrs={"class": "desc-lazyload-container"}).attrs["data-tfs-url"]
+        detail_html = self.get_spider_infos_by_proxy([desc_api], "alibaba_pc_detail", self.source)[desc_api]
+        detail_html = json.loads(re.findall("var offer_details=(.*)(?=;)", detail_html)[0])["content"]
+
+        item_info = dict(
+            base_info=dict(main_pics=main_pics, title=title, detail_html=detail_html),
+            props_info=dict(base_props=base_props, sku_props=sku_props),
+            sale_info=dict(item_price=item_price, sku_infos=sku_infos),
+            category_info=dict(category_id=category_id, category_name=category_name, root_category_id=root_category_id),
+        )
+        return item_info
 
     def get_taobao_wx_apis(self, item_ids):
         # 获取无线淘宝的数据接口
@@ -376,7 +450,15 @@ def alibaba_shop_items_test(shop_url):
     print(item_infos)
 
 
+def alibaba_item_test(item_id):
+    copy_obj = CopyService("1", "2", "3", "4", "test")
+    item_html = copy_obj.get_alibaba_item_pc_api(item_id)
+    item_infos = copy_obj.parse_alibaba_item_pc_html(item_html, "video_crawler")
+    print(item_infos)
+
+
 if __name__ == "__main__":
     # taobao_pdd_test(595183899574)
     # alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
-    alibaba_shop_items_test("https://qiyilianmd.1688.com/")
+    # alibaba_shop_items_test("https://qiyilianmd.1688.com/")
+    alibaba_item_test(592225001643)
