@@ -165,11 +165,12 @@ class CopyService:
         return spider_infos
 
     def get_alibaba_search_pc_api(self, keyword, sort_key, desc_order, src_page_no, price_start=None, price_end=None):
-        # 1688接口设计 一页60个商品需分3批获取
+        # 1688商品搜索接口设计比价麻烦 一页60个商品需分3批获取 根据关键字获取商品列表
         page_no = int(math.ceil(src_page_no / 3))
         index = src_page_no % 3
         index = index - 1 if index else 2
         start_index = index * 20
+
         search_dict = dict(
             keywords=keyword.encode("gb18030"),
             asyncCount=20,
@@ -193,6 +194,7 @@ class CopyService:
         return search_html
 
     def parse_alibaba_search_pc_html(self, search_html):
+        # 解析阿里巴巴搜索页面 根据关键字获取商品列表
         item_infos = []
         search_json = json.loads(search_html)["data"]["data"]
         offer_list, page_amount = [search_json[key] for key in ["offerList", "pageCount"]]
@@ -201,12 +203,12 @@ class CopyService:
             num_iid = offer["id"]
             title = offer["information"]["simpleSubject"]
             price = offer["tradePrice"]["offerPrice"]["valueString"]
-            print(title)
             item_info = dict(main_img=main_img, title=title, price=price, num_iid=num_iid)
             item_infos.append(item_info)
         return item_infos
 
     def get_member_id_by_shop_url(self, shop_url):
+        # 获取店铺的memberId
         headers = {"user-agent": self.wx_user_agent}
         params = dict(no_cache="true")
         response = requests.get(shop_url, params=params, headers=headers, timeout=5, allow_redirects=False)
@@ -216,6 +218,7 @@ class CopyService:
         return member_id
 
     def get_alibaba_shop_items_wx_api(self, member_id, sort_type, page_no):
+        # 获取店铺的商品列表信息 根据店铺获取商品列表
         search_dict = dict(
             memberId=member_id, sortType=sort_type, pageIndex=page_no, style="list", _async_id="offerlist:offers"
         )
@@ -225,6 +228,7 @@ class CopyService:
         return search_html
 
     def parse_alibaba_shop_items_wx_html(self, search_html):
+        # 解析阿里巴巴店铺商品页面 根据店铺获取商品列表
         spider_html = json.loads(search_html)["content"]
         soup = BeautifulSoup(spider_html, "lxml")
         item_doms = soup.find_all(attrs={"class": "item item-"})
@@ -240,6 +244,7 @@ class CopyService:
         return item_infos
 
     def get_alibaba_item_pc_api(self, item_id):
+        # 获取商品的详细信息 发现推广商品跳转后不需要经过后端检查
         item_url = self.pc_1688_item_api.format(item_id)
         click_id = hashlib.md5(str(randint(0, 999999999999)).encode("utf-8")).hexdigest()
         session_id = hashlib.md5(str(randint(0, 999999999999)).encode("utf-8")).hexdigest()
@@ -250,6 +255,7 @@ class CopyService:
         return item_html
 
     def parse_alibaba_item_pc_html(self, item_html, ops_type):
+        # 解析商品详细信息
         if ops_type == "video_crawler":
             video_id, user_id = list(map(int, re.findall(r'"videoId":"(.*?)","userId":"(.*?)"', item_html)[0]))
             video_url = self.pc_1688_video_api.format(user_id, video_id)
@@ -263,7 +269,8 @@ class CopyService:
         pre_sku_props = json.loads(re.findall(r"skuProps:(.*)(?=,)", item_html)[0])
         pre_sku_maps = json.loads(re.findall(r"skuMap:(.*)(?=,)", item_html)[0])
         price_range = re.findall(r"""price:"(.*)(?=\")""", item_html)[0]
-
+        item_price = float(price_range.split("-")[1]) * 100
+        # 解析基本属性
         base_prop_doms = soup.select("#mod-detail-attributes > div > table > tbody > tr")
         base_props = []
         for base_prop_dom in base_prop_doms:
@@ -271,7 +278,7 @@ class CopyService:
             values = list(map(lambda x: x.string, base_prop_dom.select(".de-value")))
             base_prop = map(lambda x: dict([x]), zip(features, values))
             base_props.extend(base_prop)
-
+        # 解析SKU属性 由于阿里巴巴没有pid和vid, 统一格式使用hash生成
         sku_props = []
         for pre_sku_prop in pre_sku_props:
             prop_name, prop_values = [pre_sku_prop[key] for key in ["prop", "value"]]
@@ -282,7 +289,7 @@ class CopyService:
                 vid = hashlib.md5(value_name.encode("utf-8")).hexdigest()
                 values.append(dict(vid=vid, name=value_name))
             sku_props.append(dict(pid=pid, name=prop_name, values=values))
-
+        # 解析SKU信息 propPath使用hash生成，保存和淘宝数据一致
         sku_infos = []
         for prop_name, prop_value in pre_sku_maps.items():
             prop_path = ":".join(
@@ -291,16 +298,15 @@ class CopyService:
             sku_id, sku_quantity, sku_price = [prop_value[key] for key in ["skuId", "canBookCount", "discountPrice"]]
             sku_price = float(sku_price) * 100
             sku_infos.append(dict(skuId=sku_id, propPath=prop_path, sku_quantity=sku_quantity, sku_price=sku_price))
-
-        item_price = float(price_range.split("-")[1]) * 100
+        # 解析类目信息
         pre_category_info = json.loads(re.findall(r"""(?<=categoryList":).*(?<=])""", item_html)[0])
         category_id, category_name = [pre_category_info[-1][key] for key in ["id", "name"]]
         root_category_id = pre_category_info[-2]["id"]
-        # 解析详情页
+        # 解析详情页信息
         desc_api = soup.find(attrs={"class": "desc-lazyload-container"}).attrs["data-tfs-url"]
         detail_html = self.get_spider_infos_by_proxy([desc_api], "alibaba_pc_detail", self.source)[desc_api]
         detail_html = json.loads(re.findall("var offer_details=(.*)(?=;)", detail_html)[0])["content"]
-
+        # 组合数据返回
         item_info = dict(
             base_info=dict(main_pics=main_pics, title=title, detail_html=detail_html),
             props_info=dict(base_props=base_props, sku_props=sku_props),
@@ -322,7 +328,7 @@ class CopyService:
         return item_htmls, desc_htmls
 
     def parse_taobao_wx_html(self, item_html, desc_html):
-        # 解析淘宝无线HTML|商品信息和详情信息
+        # 解析淘宝无线HTML 商品信息和详情信息
         item_json = json.loads(item_html)["data"]
         desc_json = json.loads(desc_html)["data"]
 
@@ -330,10 +336,10 @@ class CopyService:
         detail_html = desc_json["pcDescContent"]
         keys = ["skuBase", "props", "item", "mockData", "props", "skuBase"]
         skus, props, item, mock_data, props, sku_base = [item_json[key] for key in keys]
-        # 解析主图 类目
+        # 基本信息解析
         keys = ["images", "categoryId", "rootCategoryId", "title"]
         main_pics, category_id, root_category_id, title = [item[key] for key in keys]
-
+        # 基本属性和销售属性解析
         base_props = props["groupProps"][0]["基本信息"]
         sku_prices = json.loads(mock_data)["skuCore"]["sku2info"]
         sku_props = sku_base["props"]
@@ -344,7 +350,7 @@ class CopyService:
             sku_quantity = sku_price["quantity"]
             sku_price = float(sku_price["price"]["priceText"])
             sku_info.update(sku_quantity=sku_quantity, sku_price=sku_price)
-
+        # 处理主图缺少前缀
         main_pics = self.add_http_schema(main_pics)
         item_info = dict(
             base_info=dict(main_pics=main_pics, title=title, detail_html=detail_html),
@@ -355,6 +361,8 @@ class CopyService:
         return item_info
 
     def parser_item_to_pdd(self, item_info):
+        # 转换商品信息为拼多多提交数据
+        # 提交信息初始化
         pdd_submit = dict(
             cost_template_id=3442958,
             customer_num=2,
@@ -367,6 +375,7 @@ class CopyService:
             is_pre_sale=False,
             is_refundable=True,
         )
+        # 基本信息提取
         keys = ["base_info", "props_info", "sale_info", "category_info"]
         base_info, props_info, sale_info, category_info = [item_info[key] for key in keys]
         main_pics, title = [base_info[key] for key in ["main_pics", "title"]]
@@ -374,8 +383,10 @@ class CopyService:
         category_id, category_name = [category_info[key] for key in ["category_id", "category_name"]]
         item_price, sku_infos = [sale_info[key] for key in ["item_price", "sku_infos"]]
         item_price = int(item_price)
+        # 商品类目关系映射 拼多多提供的API
         category_info = self.pdd_cat_map_api.get_pdd_goods_outer_cat_mapping(category_id, category_name, title)
         category_id = category_info[-1]
+        # 更新提交信息
         pdd_submit.update(
             cat_id=category_id,
             carousel_gallery=main_pics,
@@ -384,11 +395,11 @@ class CopyService:
             goods_name=title,
             market_price=item_price + 1000,
         )
-
+        # 处理销售属性
         sku_maps = {"颜色分类": "颜色"}
         pdd_skus = self.pdd_get_spec_api.get_pdd_goods_spec(category_id)
         pdd_skus = self.map_list_to_dict(pdd_skus, ["parent_spec_name", "parent_spec_id"])
-        # 处理销售属性
+
         spec_id_maps = {}
         for sku_prop in sku_props:
             sku_prop_id, sku_old_name, sku_prop_values = [sku_prop[key] for key in ["pid", "name", "values"]]
@@ -418,6 +429,7 @@ class CopyService:
         return pdd_submit
 
     def add_pdd_item(self, item_submit):
+        # 提交到拼多多
         return self.pdd_add_item.add_pdd_goods(item_submit)
 
 
