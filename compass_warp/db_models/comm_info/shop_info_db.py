@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime
-from compass_warp.db_models.conf.settings import MongoConn
+from compass_warp.db_models.settings import MongoConn
 
 
 class ShopInfoDB:
