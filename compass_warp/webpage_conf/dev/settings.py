@@ -29,9 +29,9 @@ hostname = socket.gethostname()
 SECRET_KEY = "lpqj@xji#e)%-6vj9cjhc0&5+5v6bor)x_=s5dtdvmo$@!=e21"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["www.wusetech.com", "localhost"]
+ALLOWED_HOSTS = ["www.wusetech.com", "localhost", "www.zhinanzhenx.com"]
 
 
 # Application definition
