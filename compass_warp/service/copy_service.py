@@ -165,7 +165,8 @@ class CopyService:
         return spider_infos
 
     def get_alibaba_search_pc_api(self, keyword, sort_key, desc_order, src_page_no, price_start=None, price_end=None):
-        # 1688商品搜索接口设计比价麻烦 一页60个商品需分3批获取 根据关键字获取商品列表
+        # 1688商品搜索接口设计比较麻烦，一页60个商品需分3批获取
+        # 根据关键字获取商品列表
         page_no = int(math.ceil(src_page_no / 3))
         index = src_page_no % 3
         index = index - 1 if index else 2
@@ -244,13 +245,12 @@ class CopyService:
         return item_infos
 
     def get_alibaba_item_pc_api(self, item_id):
-        # 获取商品的详细信息 发现推广商品跳转后不需要经过后端检查
+        # 获取商品的详细信息 发现推广商品跳转后不经过后端检查
         item_url = self.pc_1688_item_api.format(item_id)
         click_id = hashlib.md5(str(randint(0, 999999999999)).encode("utf-8")).hexdigest()
         session_id = hashlib.md5(str(randint(0, 999999999999)).encode("utf-8")).hexdigest()
         item_dict = dict(clickid=click_id, sessionid=session_id)
         item_api = requests.Request("GET", item_url, params=item_dict).prepare().url
-        print(item_api)
         item_html = self.get_spider_infos_by_proxy([item_api], "alibaba_pc_item", self.source)[item_api]
         return item_html
 
@@ -278,7 +278,7 @@ class CopyService:
             values = list(map(lambda x: x.string, base_prop_dom.select(".de-value")))
             base_prop = map(lambda x: dict([x]), zip(features, values))
             base_props.extend(base_prop)
-        # 解析SKU属性 由于阿里巴巴没有pid和vid, 统一格式使用hash生成
+        # 解析SKU属性 由于阿里巴巴没有pid和vid, 为统一格式使用hash生成
         sku_props = []
         for pre_sku_prop in pre_sku_props:
             prop_name, prop_values = [pre_sku_prop[key] for key in ["prop", "value"]]
@@ -472,5 +472,5 @@ def alibaba_item_test(item_id):
 if __name__ == "__main__":
     # taobao_pdd_test(595183899574)
     # alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
-    # alibaba_shop_items_test("https://qiyilianmd.1688.com/")
-    alibaba_item_test(592225001643)
+    alibaba_shop_items_test("https://qiyilianmd.1688.com/")
+    #alibaba_item_test(592225001643)
