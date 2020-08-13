@@ -5,7 +5,7 @@ base_path = os.path.dirname(os.path.abspath(__file__))
 
 
 def process_main(env_type):
-    org_url = "compass_warp/webpage_conf/{env_type}/web_settings.py".format(env_type=env_type)
+    org_url = "compass_warp/compass_conf/{env_type}/web_settings.py".format(env_type=env_type)
     dst_url = "compass_warp/compass/settings.py"
     org_path = os.path.join(base_path, org_url)
     dst_path = os.path.join(base_path, dst_url)

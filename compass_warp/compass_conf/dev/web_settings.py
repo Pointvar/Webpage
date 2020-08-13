@@ -84,7 +84,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "znz_web",
         "USER": "root",
-        "PASSWORD": "znzops",
+        "PASSWORD": "znz!ops!123",
         "HOST": "localhost",
         "PORT": "3306",
     }
@@ -104,13 +104,12 @@ LOGGING = {
     "handlers": {
         "file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.WatchedFileHandler",
             "formatter": "verbose",
-            "filename": "/alidata1/logs/dev/compass_liuqi.log",
+            "filename": "/alidata1/logs/qas/compass_rotate.log",
         },
-        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "verbose",},
     },
-    "root": {"handlers": ["file", "console"], "level": "DEBUG", "propagate": True},
+    "root": {"handlers": ["file"], "level": "DEBUG", "propagate": True},
 }
 
 
