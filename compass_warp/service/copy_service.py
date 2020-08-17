@@ -473,4 +473,5 @@ if __name__ == "__main__":
     # taobao_pdd_test(595183899574)
     # alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
     alibaba_shop_items_test("https://qiyilianmd.1688.com/")
-    #alibaba_item_test(592225001643)
+    # alibaba_item_test(592225001643)
+

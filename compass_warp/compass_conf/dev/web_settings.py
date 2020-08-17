@@ -31,9 +31,6 @@ SECRET_KEY = "lpqj@xji#e)%-6vj9cjhc0&5+5v6bor)x_=s5dtdvmo$@!=e21"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["www.wusetech.com", "localhost", "www.zhinanzhenx.com"]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -82,7 +79,7 @@ WSGI_APPLICATION = "compass.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "znz_web",
+        "NAME": "znz_web_dev",
         "USER": "root",
         "PASSWORD": "znz!ops!123",
         "HOST": "localhost",
@@ -106,7 +103,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.handlers.WatchedFileHandler",
             "formatter": "verbose",
-            "filename": "/alidata1/logs/qas/compass_rotate.log",
+            "filename": "/alidata1/logs/dev/compass_liuqi.log",
         },
     },
     "root": {"handlers": ["file"], "level": "DEBUG", "propagate": True},
