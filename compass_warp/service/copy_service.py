@@ -474,4 +474,3 @@ if __name__ == "__main__":
     # alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
     alibaba_shop_items_test("https://qiyilianmd.1688.com/")
     # alibaba_item_test(592225001643)
-
