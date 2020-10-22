@@ -31,6 +31,8 @@ SECRET_KEY = "lpqj@xji#e)%-6vj9cjhc0&5+5v6bor)x_=s5dtdvmo$@!=e21"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+ALLOWED_HOSTS = []
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -81,7 +83,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "znz_web_dev",
         "USER": "root",
-        "PASSWORD": "znz!ops!123",
+        "PASSWORD": "znz-ops-426580",
         "HOST": "localhost",
         "PORT": "3306",
     }
