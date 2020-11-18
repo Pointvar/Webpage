@@ -4,4 +4,6 @@ compass_warp/db_models/settings.py
 compass_warp/client/node_modules/
 compass_warp/static/dist_dev/
 script/node_modules/
+**/__pycache__/
 .vscode
+.gitignore
