@@ -5,7 +5,6 @@ if __name__ == "__main__":
     sys.path.append("/home/liuqi/zhinanzhen/Backends")
 
 
-from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 import re
 import json
 import math
@@ -14,11 +13,14 @@ import requests
 from furl import furl
 from random import randint
 from bs4 import BeautifulSoup
-from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
+
+from pdd_models.add_pdd_goods import AddPddGoods
 from pdd_models.get_pdd_goods_spec import GetPddGoodsSpec
 from pdd_models.get_pdd_goods_spec_id import GetPddGoodsSpecId
-from pdd_models.add_pdd_goods import AddPddGoods
 from pdd_models.upload_pdd_goods_image import UploadPddGoodsImage
+from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
+
+from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 
 # https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22595577886459%22%7D&type=json
 # # 解析详情页

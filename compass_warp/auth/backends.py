@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from compass_warp.auth.oauth import OauthService
+
 import time
 from datetime import datetime
 import logging
@@ -14,15 +15,7 @@ class ZnzAuthBackend:
         access_info = oauth_obj.fetch_access_token()
         oauth_info = oauth_obj.fetch_oauth_info(access_info)
         oauth_info.update(platform=platform, softname=softname)
-        keys = [
-            "uid",
-            "nick",
-            "sub_nick",
-            "access_token",
-            "refresh_token",
-            "access_expires",
-            "refresh_expires",
-        ]
+        keys = ["uid", "nick", "sub_nick", "access_token", "refresh_token", "access_expires", "refresh_expires"]
         uid, nick, sub_nick, access_token, refresh_token, access_expires, refresh_expires = [oauth_info[key] for key in keys]
         username = "^|$".join([nick, platform, softname])
         password = "^|$".join([access_token, refresh_token])

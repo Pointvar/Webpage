@@ -85,6 +85,24 @@ def taobao_login(request):
     return HttpResponseRedirect(reverse("index"))
 
 
+@ensure_csrf_cookie
+def zhanwai_login_by_phone(request):
+    """站外授权登陆"""
+    if request.method != "GET":
+        raise Http404("站外授权失败, 请求必须为GET")
+    auth_phone, auth_code = [request.GET.get(key) for key in ["auth_phone", "auth_code"]]
+    if auth_phone and auth_code:
+        code = "|".join([auth_phone, auth_code])
+        user = authenticate(token=code, platform="zhanwei_phone", softname="znz")
+        save_oauth_user_info(user)
+        login(request, user)
+        request.session.set_expiry(7 * 24 * 3600)
+        return HttpResponseRedirect(reverse("index"))
+    else:
+        logger.error("[auth] 站外授权失败, 请求参数丢失。 auth_phone:{0} auth_code:{1}".format(auth_phone, auth_code))
+        raise Http404("站外授权失败, 请求参数丢失。")
+
+
 # ////////////退出相关View
 def logout_page(request):
     """退出登陆状态"""

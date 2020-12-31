@@ -1,5 +1,4 @@
 import requests
-from urllib.parse import unquote
 from urllib import parse
 from compass_warp.compass.settings import APP_CONF_TB, OAUTH_CONF_TB, OAUTH_REDIRECT
 
@@ -16,7 +15,13 @@ class OauthService:
         redirect_url = OAUTH_REDIRECT["taobao"]
         token_url = OAUTH_CONF_TB["token_url"]
 
-        params = dict(code=token, grant_type="authorization_code", client_id=client_id, client_secret=client_secret, redirect_uri=redirect_url,)
+        params = dict(
+            code=token,
+            grant_type="authorization_code",
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri=redirect_url,
+        )
         resp = requests.post(token_url, data=params)
         access_info = resp.json()
         if "taobao_user_id" not in access_info:
@@ -33,7 +38,9 @@ class OauthService:
             "expires_in",
             "re_expires_in",
         ]
-        (uid, nick, sub_nick, access_token, refresh_token, access_expires, refresh_expires) = [access_info[key] for key in keys]
+        (uid, nick, sub_nick, access_token, refresh_token, access_expires, refresh_expires) = [
+            access_info[key] for key in keys
+        ]
         nick = parse.unquote(nick)
         sub_nick = parse.unquote(sub_nick)
 
