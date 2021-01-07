@@ -31,7 +31,7 @@ SECRET_KEY = "lpqj@xji#e)%-6vj9cjhc0&5+5v6bor)x_=s5dtdvmo$@!=e21"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -80,7 +80,7 @@ WSGI_APPLICATION = "compass.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "mysql.connector.django",
         "NAME": "znz_web_dev",
         "USER": "root",
         "PASSWORD": "znz-ops-426580",
@@ -107,8 +107,12 @@ LOGGING = {
             "formatter": "verbose",
             "filename": "/alidata1/logs/dev/compass_liuqi.log",
         },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
     },
-    "root": {"handlers": ["file"], "level": "DEBUG", "propagate": True},
+    "root": {"handlers": ["file", "console"], "level": "DEBUG", "propagate": True},
 }
 
 
@@ -128,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Shanghai"
 
 USE_I18N = True
 
