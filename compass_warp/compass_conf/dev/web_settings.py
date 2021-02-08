@@ -105,7 +105,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.handlers.WatchedFileHandler",
             "formatter": "verbose",
-            "filename": "/alidata1/logs/dev/compass_liuqi.log",
+            "filename": "/alidata1/logs/dev/web/compass_liuqi.log",
         },
         "console": {
             "class": "logging.StreamHandler",
