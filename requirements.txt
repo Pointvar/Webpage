@@ -3,3 +3,8 @@ Django==3.1.4
 PyYAML==5.3.1
 requests==2.25.1
 mysql-connector-python==8.0.22
+furl==2.1.2
+beautifulsoup4==4.9.3
+
+#DEV
+#black==21.5b0

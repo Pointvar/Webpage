@@ -222,9 +222,7 @@ class CopyService:
 
     def get_alibaba_shop_items_wx_api(self, member_id, sort_type, page_no):
         # 获取店铺的商品列表信息 根据店铺获取商品列表
-        search_dict = dict(
-            memberId=member_id, sortType=sort_type, pageIndex=page_no, style="list", _async_id="offerlist:offers"
-        )
+        search_dict = dict(memberId=member_id, sortType=sort_type, pageIndex=page_no, style="list", _async_id="offerlist:offers")
         search_api = requests.Request("GET", self.wx_1688_shop_items_api, params=search_dict).prepare().url
         print(search_api)
         search_html = self.get_spider_infos_by_proxy([search_api], "alibaba_wx_shop_items", self.source)[search_api]
@@ -421,9 +419,7 @@ class CopyService:
             for spec_id_key in spec_id_keys:
                 spec_id = spec_id_maps[spec_id_key]
                 spec_id_list.append(spec_id)
-            sku_init.update(
-                spec_id_list=spec_id_list, thumb_url=main_pics[0], price=item_price, multi_price=item_price - 1000
-            )
+            sku_init.update(spec_id_list=spec_id_list, thumb_url=main_pics[0], price=item_price, multi_price=item_price - 1000)
             sku_list.append(sku_init)
         pdd_submit.update(sku_list=sku_list)
         return pdd_submit

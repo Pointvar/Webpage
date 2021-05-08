@@ -16,9 +16,7 @@ def process_main(env_type):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="配置文件初始化")
-    parser.add_argument(
-        "-T", "--env_type", choices=["dev", "prd", "qas"], required=True, help="指定初始化环境"
-    )
+    parser.add_argument("-T", "--env_type", choices=["dev", "prd", "qas"], required=True, help="指定初始化环境")
     args = parser.parse_args()
     env_type = args.env_type
     process_main(env_type)

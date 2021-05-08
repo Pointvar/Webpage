@@ -1,6 +1,6 @@
 import subprocess
 
-USERNAME = 'Pointvar'
+USERNAME = "Pointvar"
 PATHS = ["Archive", "Website"]
 GIT_URL = "git clone git@github.com:{username}/{path}.git"
 
