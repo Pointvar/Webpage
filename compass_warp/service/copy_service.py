@@ -104,7 +104,7 @@ from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 
 
 class CopyService:
-    h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D&type=json"
+    h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D"
     h5_desc_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdesc/6.0/?data=%7B%22id%22%3A%22{0}%22%2C%22type%22%3A%221%22%2C+%22f%22%3A%22%22%7D"
     pc_1688_search_api = "https://search.1688.com/service/marketOfferResultViewService"
     pc_1688_item_api = "https://detail.1688.com/offer/{0}.html"
@@ -294,9 +294,7 @@ class CopyService:
         # 解析SKU信息 propPath使用hash生成，保存和淘宝数据一致
         sku_infos = []
         for prop_name, prop_value in pre_sku_maps.items():
-            prop_path = ":".join(
-                list(map(lambda x: hashlib.md5(x.encode("utf-8")).hexdigest(), prop_name.split("&gt;")))
-            )
+            prop_path = ":".join(list(map(lambda x: hashlib.md5(x.encode("utf-8")).hexdigest(), prop_name.split("&gt;"))))
             sku_id, sku_quantity, sku_price = [prop_value[key] for key in ["skuId", "canBookCount", "discountPrice"]]
             sku_price = float(sku_price) * 100
             sku_infos.append(dict(skuId=sku_id, propPath=prop_path, sku_quantity=sku_quantity, sku_price=sku_price))
