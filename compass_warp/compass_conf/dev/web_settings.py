@@ -81,9 +81,9 @@ WSGI_APPLICATION = "compass.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "mysql.connector.django",
-        "NAME": "znz_web_dev",
+        "NAME": "sh_web_dev",
         "USER": "root",
-        "PASSWORD": "znz-ops-426580",
+        "PASSWORD": "sh-ops",
         "HOST": "localhost",
         "PORT": "3306",
     }

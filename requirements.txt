@@ -5,6 +5,8 @@ requests==2.25.1
 mysql-connector-python==8.0.22
 furl==2.1.2
 beautifulsoup4==4.9.3
+grpcio==1.37.1
+grpcio-tools==1.37.1
 
 #DEV
 #black==21.5b0

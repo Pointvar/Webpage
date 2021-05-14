@@ -1,9 +1,11 @@
 if __name__ == "__main__":
-    import sys
+    import os, sys
 
-    sys.path.append("/home/liuqi/zhinanzhen/Commons")
-    sys.path.append("/home/liuqi/zhinanzhen/Backends")
+    dir_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../Webpage"))
+    sys.path.append(dir_path)
+    from compass_warp.compass_conf.set_env import set_path_env
 
+    set_path_env()
 
 import re
 import json
@@ -222,7 +224,9 @@ class CopyService:
 
     def get_alibaba_shop_items_wx_api(self, member_id, sort_type, page_no):
         # 获取店铺的商品列表信息 根据店铺获取商品列表
-        search_dict = dict(memberId=member_id, sortType=sort_type, pageIndex=page_no, style="list", _async_id="offerlist:offers")
+        search_dict = dict(
+            memberId=member_id, sortType=sort_type, pageIndex=page_no, style="list", _async_id="offerlist:offers"
+        )
         search_api = requests.Request("GET", self.wx_1688_shop_items_api, params=search_dict).prepare().url
         print(search_api)
         search_html = self.get_spider_infos_by_proxy([search_api], "alibaba_wx_shop_items", self.source)[search_api]
