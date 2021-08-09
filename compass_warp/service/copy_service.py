@@ -82,7 +82,7 @@ from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 # item_info = dict(
 #     base_info = ,
 #
-
+#
 #     main_pics=main_pics, , )
 
 # soup = BeautifulSoup(spider_html, "lxml")
