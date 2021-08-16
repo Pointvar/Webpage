@@ -1,0 +1,24 @@
+.ant-layout-header {
+  display: flex;
+  justify-content: space-around;
+  background: #87ceeb;
+}
+#menus {
+  margin-left: 150px;
+  flex-grow: 1;
+}
+#menus .ant-menu {
+  background: transparent;
+}
+#logo img {
+  height: 64px;
+  vertical-align: top;
+  margin-right: 32px;
+}
+#user,
+#operate {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 32px;
+}

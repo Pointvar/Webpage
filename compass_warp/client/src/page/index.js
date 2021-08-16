@@ -1,4 +1,4 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import App from "../component/copy-setting";
-ReactDOM.render(<App />, document.getElementById("root"));
+import Index from "../component/index";
+ReactDOM.render(<Index />, document.getElementById("root"));
