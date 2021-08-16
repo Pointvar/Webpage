@@ -1,7 +1,10 @@
 import React, { Fragment } from "react";
+import { Input } from "antd";
 import "antd/dist/antd.css";
 import "./index.css";
-import { Input } from "antd";
+
+import taobaoLogo from "../../public/taobao_logo.png";
+import tmallLogo from "../../public/tmall_logo.png";
 const { TextArea } = Input;
 
 function InputArea() {
@@ -10,10 +13,10 @@ function InputArea() {
       <div id="platforms">
         <span className="input_tips">支持平台:</span>
         <a href="https://www.taobao.com/" target="_blank">
-          <img src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" />
+          <img src={taobaoLogo} />
         </a>
-        <a href="https://www.taobao.com/" target="_blank">
-          <img src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" />
+        <a href="https://www.tmall.com/" target="_blank">
+          <img src={tmallLogo} />
         </a>
       </div>
       <div id="input-area">
@@ -22,7 +25,7 @@ function InputArea() {
           rows={10}
           allowClear
           bordered
-          defaultValue="提示：可输入淘宝宝贝地址，多个地址请用回车键换行。"
+          placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。"
         />
       </div>
     </Fragment>

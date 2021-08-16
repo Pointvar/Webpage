@@ -16,6 +16,11 @@ let webpackDev = merge(webpackBase, {
     watchOptions: {
       ignored: /node_modules/,
     },
+    proxy: {
+      "/ajax_": {
+        target: "http://localhost:8001/",
+      },
+    },
   },
 });
 module.exports = webpackDev;

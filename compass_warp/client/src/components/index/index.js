@@ -105,7 +105,7 @@ function Index() {
         <Row justify="center">
           <Col span={2}>
             <Button type="primary" block>
-              复制商品
+              开始复制
             </Button>
           </Col>
         </Row>

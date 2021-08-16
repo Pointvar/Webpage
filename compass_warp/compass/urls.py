@@ -24,7 +24,12 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/taobao", auth_view.taobao_login),
     path("auth/demo", main_view.handler404),
-    path("ajax_hello", main_ajax_view.ajax_hello, name="index"),
     path("taobao_login", auth_view.taobao_login),
     path("debug_login", auth_view.debug_login),
 ]
+
+ajax_main_urlpatterns = [
+    path("ajax_get_shop_info", main_ajax_view.ajax_get_shop_info),
+]
+
+urlpatterns += ajax_main_urlpatterns

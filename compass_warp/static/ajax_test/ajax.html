@@ -1,0 +1,82 @@
+<html> 
+   <head>
+        <meta charset="UTF-8">
+        <title>AJAX 接口测试</title>
+<script
+  src="https://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
+    </head>
+    <body>
+
+        接口名称：<input type="text" size="100" id="ajax_url" /> <br /> <br />
+        POST JSON： <br /><textarea id="post_json" rows="10" cols="100"></textarea> <br /> <br />
+        <button id="submit">提交</button>
+        <script type="text/javascript">
+            (function() {
+            //cookie 读取
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if(document.cookie && document.cookie != '') {
+                        var cookies = document.cookie.split(';');
+                        for(var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if(cookie.substring(0, name.length + 1) == (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                //同域判断
+                function sameOrigin(url) {
+                    // url could be relative or scheme relative or absolute
+                    var host = document.location.host;
+                    // host + port
+                    var protocol = document.location.protocol;
+                    var sr_origin = '//' + host;
+                    var origin = protocol + sr_origin;
+                    // Allow absolute or scheme relative URLs to same origin
+                    return(url == origin || url.slice(0, origin.length + 1) == origin + '/') || (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+                    // or any other URL that isn't scheme relative or absolute i.e relative.
+                    !(/^(\/\/|http:|https:).*/.test(url));
+                }
+                //安全请求判断
+                function safeMethod(method) {
+                    return(/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                // ajax IE兼容性
+                $.ajaxSetup({
+                    cache: false,
+                    //解决IE浏览器下缓存的问题
+                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                    //解决IE浏览器乱码问题
+                    dataType: 'json'
+                });
+                //Ajax CSRFToken处理
+                $(document).ajaxSend(function(event, xhr, settings) {
+                    if(!safeMethod(settings.type) && sameOrigin(settings.url)) {
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                });
+
+                $('#submit').click(function(){
+                    var url = $('#ajax_url').val();
+                    var data = $('#post_json').val();
+                    console.log(data);
+                    $.ajax({
+                        url: 'http://' + location.host + '/' + url,
+                        type: "post",
+                        dataType: "json",
+                        data: data,
+                        success: function(ret_data){
+                            console.log(ret_data);
+                        }
+                    });
+                })
+            })();
+        </script>
+	</body>
+</html>
