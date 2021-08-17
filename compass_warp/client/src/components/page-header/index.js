@@ -1,10 +1,13 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import "antd/dist/antd.css";
 import "./index.css";
 import { Layout, Menu, Button } from "antd";
 const { Header } = Layout;
 
 function PageHeader(props) {
+  const data = useSelector((state) => state.data);
+  const { nick, deadline } = data;
   return (
     <Header>
       <div id="logo">
@@ -31,8 +34,8 @@ function PageHeader(props) {
         </Menu>
       </div>
       <div id="user">
-        <span>店铺名称: pdd123456789</span>
-        <span>到期时间: 2019-09-10</span>
+        <span>店铺名称: {nick}</span>
+        <span>到期时间: {deadline}</span>
       </div>
       <div id="operate">
         <Button type="primary">联系我们</Button>

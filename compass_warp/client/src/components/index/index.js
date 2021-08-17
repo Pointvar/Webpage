@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Button, Layout, Row, Col } from "antd";
 import "antd/dist/antd.css";
 import "./index.css";
@@ -7,6 +8,8 @@ import PageHeader from "../page-header";
 import InputArea from "../input-area";
 import CopyTabs from "../copy-tabs";
 import { Content } from "antd/lib/layout/layout";
+
+import { getShopInfo } from "../../actions/link-copy";
 // import PageFooter from "../page-footer";
 
 const headerProps = {
@@ -94,6 +97,10 @@ const copyTabProps = {
 };
 
 function Index() {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getShopInfo({}));
+  }, []);
   return (
     <Layout>
       <PageHeader {...headerProps} />

@@ -3,7 +3,7 @@ const Pages = require("./webpack.entry");
 let entrys = {};
 Pages.forEach((page) => {
   const pageEntry = page.entry;
-  entrys[pageEntry] = `./src/page/${pageEntry}.js`;
+  entrys[pageEntry] = `./src/pages/${pageEntry}.js`;
 });
 module.exports = {
   entry: entrys,
