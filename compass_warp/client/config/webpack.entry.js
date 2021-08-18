@@ -1,3 +1,3 @@
-const Pages = [{ entry: "index" }];
+const pages = [{ entry: "link-copy" }];
 
-module.exports = Pages;
+module.exports = pages;

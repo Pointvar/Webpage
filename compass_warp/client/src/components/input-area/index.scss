@@ -1,0 +1,16 @@
+.input-area-box {
+  .platforms {
+    display: flex;
+    img {
+      height: 32px;
+      margin-left: 10px;
+    }
+  }
+  .input-area {
+    display: flex;
+    margin-top: 24px;
+    .input_tips {
+      width: 75px;
+    }
+  }
+}

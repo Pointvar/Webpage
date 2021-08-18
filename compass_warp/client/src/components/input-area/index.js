@@ -1,7 +1,7 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { Input } from "antd";
 import "antd/dist/antd.css";
-import "./index.css";
+import "./index.scss";
 
 import taobaoLogo from "../../public/taobao_logo.png";
 import tmallLogo from "../../public/tmall_logo.png";
@@ -9,17 +9,17 @@ const { TextArea } = Input;
 
 function InputArea() {
   return (
-    <Fragment>
-      <div id="platforms">
+    <div className="input-area-box">
+      <div className="platforms">
         <span className="input_tips">支持平台:</span>
-        <a href="https://www.taobao.com/" target="_blank">
+        <a href="https://www.taobao.com/" target="_blank" rel="noreferrer">
           <img src={taobaoLogo} />
         </a>
-        <a href="https://www.tmall.com/" target="_blank">
+        <a href="https://www.tmall.com/" target="_blank" rel="noreferrer">
           <img src={tmallLogo} />
         </a>
       </div>
-      <div id="input-area">
+      <div className="input-area">
         <span className="input_tips">输入链接:</span>
         <TextArea
           rows={10}
@@ -28,7 +28,7 @@ function InputArea() {
           placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。"
         />
       </div>
-    </Fragment>
+    </div>
   );
 }
 

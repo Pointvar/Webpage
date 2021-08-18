@@ -1,16 +1,16 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import "antd/dist/antd.css";
-import "./index.css";
+import "./index.scss";
 import { Layout, Menu, Button } from "antd";
 const { Header } = Layout;
 
 function PageHeader(props) {
-  const data = useSelector((state) => state.data);
-  const { nick, deadline } = data;
+  const shop_info = useSelector((state) => state.shop_info);
+  const { nick, deadline } = shop_info;
   return (
     <Header>
-      <div id="logo">
+      <div className="logo">
         <h1>
           <a href="/index">
             <img src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" />
@@ -18,7 +18,7 @@ function PageHeader(props) {
           </a>
         </h1>
       </div>
-      <div id="menus">
+      <div className="menus">
         <Menu
           theme="dark"
           mode="horizontal"
@@ -33,11 +33,11 @@ function PageHeader(props) {
           })}
         </Menu>
       </div>
-      <div id="user">
+      <div className="user">
         <span>店铺名称: {nick}</span>
         <span>到期时间: {deadline}</span>
       </div>
-      <div id="operate">
+      <div className="operate">
         <Button type="primary">联系我们</Button>
         <Button type="primary" danger>
           续费

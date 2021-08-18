@@ -4,6 +4,8 @@ compass_warp/db_models/settings.py
 compass_warp/client/node_modules/
 compass_warp/static/dist_dev/
 script/node_modules/
+compass_warp/client/.eslintrc.json
+compass_warp/client/jsconfig.json
 **/__pycache__/
 .vscode
 .gitignore
