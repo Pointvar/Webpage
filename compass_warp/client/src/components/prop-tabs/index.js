@@ -3,44 +3,53 @@ import { Cascader, Tabs, Radio, Form } from "antd";
 
 import "antd/dist/antd.css";
 import "./index.scss";
-const { TabPane } = Tabs;
 
-// 选择框
-function ManualSelect(props) {
-  const { options } = props;
-  return (
-    <Cascader options={options} changeOnSelect style={{ width: "300px" }} />
-  );
-}
+const { TabPane } = Tabs;
 
 // 单个属性值
 function PropElement(props) {
   const { label, name, defaultValue, selectInfos } = props;
   const [value, setValue] = React.useState(defaultValue);
-  console.log("x", value);
-
   const handelerRaidoChange = (e) => {
     setValue(e.target.value);
   };
   return (
-    <Form.Item name={name}>
-      <div className="prop-element">
-        <span>{label}:</span>
-        <Radio.Group onChange={handelerRaidoChange} value={value}>
-          {selectInfos.map((selectInfo) => {
-            const { key, value } = selectInfo;
-            return (
-              <Radio value={key} key={key}>
-                {value}
-              </Radio>
-            );
-          })}
-          {label === "类目设置" && value === "manual" ? (
-            <ManualSelect options={props.options} />
-          ) : null}
-        </Radio.Group>
-      </div>
-    </Form.Item>
+    <div className="prop-box">
+      <Form.Item name={name}>
+        <div className="prop-element">
+          <span>{label}:</span>
+          <Radio.Group onChange={handelerRaidoChange} value={value}>
+            {selectInfos.map((selectInfo) => {
+              const { key, value } = selectInfo;
+              return (
+                <Radio value={key} key={key}>
+                  {value}
+                </Radio>
+              );
+            })}
+          </Radio.Group>
+        </div>
+      </Form.Item>
+      {label === "类目设置" && value === "MANUAL" ? (
+        <Form.Item
+          name="custom_category"
+          rules={[
+            {
+              required: true,
+              message:
+                "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
+            },
+          ]}
+        >
+          <Cascader
+            options={props.options}
+            changeOnSelect
+            placeholder="提示：请点击输入商品类目。"
+            style={{ width: "300px" }}
+          />
+        </Form.Item>
+      ) : null}
+    </div>
   );
 }
 

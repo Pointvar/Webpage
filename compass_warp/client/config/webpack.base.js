@@ -10,40 +10,15 @@ module.exports = {
   entry: entrys,
   resolve: {
     alias: {
-      actions: path.resolve(__dirname, "../src/actions"),
-      apis: path.resolve(__dirname, "../src/apis"),
-      components: path.resolve(__dirname, "../src/components"),
-      constants: path.resolve(__dirname, "../src/constants"),
-      containers: path.resolve(__dirname, "../src/containers"),
-      public: path.resolve(__dirname, "../src/public"),
-      reducers: path.resolve(__dirname, "../src/reducers"),
-      store: path.resolve(__dirname, "../src/store"),
+      "@/features": path.resolve(__dirname, "../src/features"),
+      "@/actions": path.resolve(__dirname, "../src/actions"),
+      "@/apis": path.resolve(__dirname, "../src/apis"),
+      "@/components": path.resolve(__dirname, "../src/components"),
+      "@/constants": path.resolve(__dirname, "../src/constants"),
+      "@/containers": path.resolve(__dirname, "../src/containers"),
+      "@/public": path.resolve(__dirname, "../src/public"),
+      "@/reducers": path.resolve(__dirname, "../src/reducers"),
+      "@/store": path.resolve(__dirname, "../src/store"),
     },
-  },
-  module: {
-    rules: [
-      {
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
-          options: {
-            presets: ["@babel/preset-env", "@babel/preset-react"],
-          },
-        },
-      },
-      {
-        test: /\.(css|scss)$/,
-        use: ["style-loader", "css-loader", "sass-loader"],
-      },
-      {
-        test: /\.(png|jpg|gif)$/,
-        use: [
-          {
-            loader: "file-loader",
-          },
-        ],
-      },
-    ],
   },
 };

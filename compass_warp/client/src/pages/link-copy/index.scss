@@ -3,7 +3,7 @@
   padding: 0px 50px;
   button {
     display: block;
-    margin: 0 auto;
+    margin: 12px auto 0px auto;
   }
   .ant-form-item {
     margin-bottom: 0px;
@@ -13,8 +13,7 @@
 #root {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: space-around;
+  min-height: 100%;
   .ant-layout-header,
   .ant-layout-content,
   .ant-layout-footer {

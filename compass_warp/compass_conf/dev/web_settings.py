@@ -48,7 +48,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    #"django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -154,15 +154,25 @@ AUTHENTICATION_BACKENDS = ["auth.backends.ZnzAuthBackend"]
 
 
 # OAUTH2配置文件
-
 SERVER_HOST = "www.wusetech.com"
-# 淘宝
-OAUTH_REDIRECT = {"taobao": "https://{0}/auth/taobao".format(SERVER_HOST)}
-APP_CONF_TB = {"APP_KEY": 23525554, "APP_SECRET": "a97d2c608806f706197c4e619e032b9b"}
-OAUTH_CONF_TB = {
+# # 淘宝
+# OAUTH_REDIRECT_TB = {"taobao": "https://{0}/auth/taobao".format(SERVER_HOST)}
+# APP_CONF_TB = {"APP_KEY": 23525554, "APP_SECRET": "a97d2c608806f706197c4e619e032b9b"}
+# OAUTH_CONF_TB = {
+#     "token_url": "https://oauth.taobao.com/token",
+#     "auth_url": "https://oauth.taobao.com/authorize?response_type=code&client_id={0}&redirect_uri={1}&state=1212&view=web".format(
+#         APP_CONF_TB["APP_KEY"], OAUTH_REDIRECT_TB["taobao"]
+#     ),
+#     "redirect_url": OAUTH_REDIRECT_TB["taobao"],
+# }
+
+# 拼多多
+OAUTH_REDIRECT_PDD = {"taobao": "http://{0}/auth/pinduoduo".format(SERVER_HOST)}
+APP_CONF_PDD = {"APP_KEY": "5d68faf8618e423295eb6ed7ab83905f", "APP_SECRET": "8ebb8796b3975cc36d5a5521380140e1ee675a4a"}
+OAUTH_CONF_PDD = {
     "token_url": "https://oauth.taobao.com/token",
     "auth_url": "https://oauth.taobao.com/authorize?response_type=code&client_id={0}&redirect_uri={1}&state=1212&view=web".format(
         APP_CONF_TB["APP_KEY"], OAUTH_REDIRECT["taobao"]
     ),
-    "redirect_url": OAUTH_REDIRECT["taobao"],
+    "redirect_url": OAUTH_REDIRECT_PDD["taobao"],
 }

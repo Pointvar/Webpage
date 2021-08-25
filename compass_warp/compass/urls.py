@@ -18,6 +18,7 @@ from django.urls import path
 from compass_warp.auth import view as auth_view
 from compass_warp.view.main import view as main_view
 from compass_warp.view.main import ajax_view as main_ajax_view
+from compass_warp.view.copy import ajax_view as copy_ajax_view
 
 handler404 = main_view.handler404
 urlpatterns = [
@@ -32,4 +33,9 @@ ajax_main_urlpatterns = [
     path("ajax_get_shop_info", main_ajax_view.ajax_get_shop_info),
 ]
 
+ajax_copy_urlPatterns = [
+    path("ajax_create_copy_task", copy_ajax_view.ajax_create_copy_task),
+]
+
 urlpatterns += ajax_main_urlpatterns
+urlpatterns += ajax_copy_urlPatterns

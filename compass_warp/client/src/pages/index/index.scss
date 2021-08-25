@@ -1,0 +1,38 @@
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  .ant-layout-header,
+  .ant-layout-content,
+  .ant-layout-footer {
+    min-width: 1200px;
+  }
+  .ant-layout-header {
+    background: #0a80e6;
+  }
+  .ant-layout-header .logo {
+    margin-left: 80px;
+    h1 {
+      color: white;
+      font-size: 40px;
+    }
+  }
+  .ant-layout-content {
+    background: url("../../public/banner_index.png") center center repeat;
+  }
+  .ant-layout-content .banner_text {
+    position: absolute;
+    top: 55%;
+    left: 10%;
+    .banner_title {
+      font-size: 30px;
+    }
+    .banner_slogan {
+      font-size: 15px;
+    }
+    h1,
+    h3 {
+      color: white;
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import React from "react";
-import { Input } from "antd";
+import { Input, Form } from "antd";
+
 import "antd/dist/antd.css";
 import "./index.scss";
 
@@ -21,12 +22,22 @@ function InputArea() {
       </div>
       <div className="input-area">
         <span className="input_tips">输入链接:</span>
-        <TextArea
-          rows={10}
-          allowClear
-          bordered
-          placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。"
-        />
+        <Form.Item
+          name="copy_urls"
+          rules={[
+            {
+              required: true,
+              message: "检测到宝贝链接为空，请输入宝贝链接。",
+            },
+          ]}
+        >
+          <TextArea
+            rows={10}
+            allowClear
+            bordered
+            placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。"
+          />
+        </Form.Item>
       </div>
     </div>
   );
