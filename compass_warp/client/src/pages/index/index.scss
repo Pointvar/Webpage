@@ -8,7 +8,7 @@
     min-width: 1200px;
   }
   .ant-layout-header {
-    background: #0a80e6;
+    background: #64a8e4;
   }
   .ant-layout-header .logo {
     margin-left: 80px;
@@ -22,13 +22,14 @@
   }
   .ant-layout-content .banner_text {
     position: absolute;
-    top: 55%;
-    left: 10%;
+    margin: 200px 0px 0px 250px;
+    text-align: center;
     .banner_title {
-      font-size: 30px;
+      font-size: 48px;
     }
     .banner_slogan {
-      font-size: 15px;
+      padding-left: 32px;
+      font-size: 24px;
     }
     h1,
     h3 {

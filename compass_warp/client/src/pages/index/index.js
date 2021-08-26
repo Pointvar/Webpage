@@ -19,14 +19,13 @@ function Index() {
         </div>
       </Header>
       <Content>
-        <div className="banner_text">
+        <h1>拼多多授权页面</h1>
+        {/* <div className="banner_text">
           <h1 className="banner_title">拼多多 开店必备</h1>
-          <h3 className="banner_slogan">
-            一个工具解决开店难题，让拼多多开店更省心
-          </h3>
-        </div>
+          <h3 className="banner_slogan">搬家上货不求人</h3>
+        </div> */}
       </Content>
-      <PageFooter />
+      {/* <PageFooter /> */}
     </Fragment>
   );
 }

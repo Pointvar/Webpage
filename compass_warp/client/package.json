@@ -4,7 +4,8 @@
   "description": "快捷上货前端",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack serve --progress --compress --color --config config/webpack.dev.js"
+    "dev": "webpack serve --progress --compress --color --config config/webpack.dev.js",
+    "prd": "webpack --progress --config config/webpack.prd.js"
   },
   "author": "",
   "repository": "",
@@ -18,7 +19,6 @@
     "css-loader": "^6.2.0",
     "eslint": "^7.32.0",
     "eslint-plugin-react": "^7.24.0",
-    "file-loader": "^6.2.0",
     "sass": "^1.38.0",
     "sass-loader": "^12.1.0",
     "style-loader": "^3.2.1",
