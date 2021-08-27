@@ -5,11 +5,18 @@
       height: 32px;
       margin-left: 10px;
     }
+    .input_tips {
+      font-size: 16px;
+      font-weight: 625;
+      width: 75px;
+    }
   }
   .input-area {
     display: flex;
     margin-top: 24px;
     .input_tips {
+      font-size: 16px;
+      font-weight: 625;
       width: 75px;
     }
     .ant-form-item {

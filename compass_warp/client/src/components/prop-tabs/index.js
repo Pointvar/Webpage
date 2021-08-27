@@ -1,5 +1,5 @@
-import React from "react";
-import { Cascader, Tabs, Radio, Form } from "antd";
+import React, { Fragment } from "react";
+import { Cascader, Tabs, Radio, Form, Tooltip } from "antd";
 
 import "antd/dist/antd.css";
 import "./index.scss";
@@ -7,18 +7,24 @@ import "./index.scss";
 const { TabPane } = Tabs;
 
 // 单个属性值
-function PropElement(props) {
-  const { label, name, defaultValue, selectInfos } = props;
+function PropRadio(props) {
+  const {
+    label,
+    name,
+    defaultValue,
+    selectInfos,
+    tips,
+    component = null,
+  } = props;
   const [value, setValue] = React.useState(defaultValue);
-  const handelerRaidoChange = (e) => {
+  const handelerChange = (e) => {
     setValue(e.target.value);
   };
   return (
     <div className="prop-box">
-      <Form.Item name={name}>
+      <Form.Item name={name} label={<Tooltip title={tips}>{label}</Tooltip>}>
         <div className="prop-element">
-          <span>{label}:</span>
-          <Radio.Group onChange={handelerRaidoChange} value={value}>
+          <Radio.Group onChange={handelerChange} value={value}>
             {selectInfos.map((selectInfo) => {
               const { key, value } = selectInfo;
               return (
@@ -30,25 +36,7 @@ function PropElement(props) {
           </Radio.Group>
         </div>
       </Form.Item>
-      {label === "类目设置" && value === "MANUAL" ? (
-        <Form.Item
-          name="custom_category"
-          rules={[
-            {
-              required: true,
-              message:
-                "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
-            },
-          ]}
-        >
-          <Cascader
-            options={props.options}
-            changeOnSelect
-            placeholder="提示：请点击输入商品类目。"
-            style={{ width: "300px" }}
-          />
-        </Form.Item>
-      ) : null}
+      {component && component.showValue === value ? component.fragment : null}
     </div>
   );
 }
@@ -62,9 +50,17 @@ function PropTabs(props) {
         {tabInfos.map((tabInfo) => {
           const { tabKey, tabTitle, tabContents } = tabInfo;
           return (
-            <TabPane tab={tabTitle} key={tabKey}>
+            <TabPane tab={tabTitle} key={tabKey} forceRender>
               {tabContents.map((tabContent, index) => {
-                return <PropElement {...tabContent} key={index} />;
+                if (tabContent.type === "radio") {
+                  return <PropRadio {...tabContent} key={index} />;
+                } else if (tabContent.type === "component") {
+                  return (
+                    <div className="prop-box" key={index}>
+                      {tabContent.component.fragment}
+                    </div>
+                  );
+                }
               })}
             </TabPane>
           );
