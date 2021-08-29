@@ -114,13 +114,13 @@ class CopyService:
     wx_1688_shop_items_api = "https://winport.m.1688.com/winport/asyncView"
     wx_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
-    def __init__(self, sid, nick, platform, soft_name, source):
+    def __init__(self, sid, nick, platform, soft_code, source):
         self.sid = sid
         self.nick = nick
         self.platform = platform
-        self.soft_name = soft_name
+        self.soft_code = soft_code
         self.source = source
-        self.user_info = dict(sid=sid, nick=nick, platform=platform, soft_name=soft_name)
+        self.user_info = dict(sid=sid, nick=nick, platform=platform, soft_code=soft_code)
         self.pdd_cat_map_api = GetPddGoodsOuterCatMapping(self.user_info, self.source)
         self.pdd_get_spec_api = GetPddGoodsSpec(self.user_info, self.source)
         self.pdd_get_spec_id_api = GetPddGoodsSpecId(self.user_info, self.source)

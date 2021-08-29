@@ -1,12 +1,17 @@
-import requests
-from urllib import parse
-from compass_warp.compass.settings import APP_CONF_TB, OAUTH_CONF_TB, OAUTH_REDIRECT
+from pdd_models.create_pdd_pop_auth_token import CreatePddPopAuthToken
 
 
 class OauthService:
-    def __init__(self, token, platform):
+    def __init__(self, token, platform, soft_code):
         self.token = token
         self.platform = platform
+        self.soft_code = soft_code
+        self.user_info = dict(sid=0, nick="", platform=platform, soft_code=soft_code)
+        self.pdd_auth_token_api = CreatePddPopAuthToken(self.user_info, "web-oauth")
+
+    def fetch_pinduoduo_oauth_info(self):
+        oauth_info = self.pdd_auth_token_api.create_pdd_pop_auth_token(self.token)
+        return oauth_info
 
     # def fetch_access_token(self):
     #     token, platform = self.token, self.platform
@@ -55,5 +60,5 @@ class OauthService:
 
 
 if __name__ == "__main__":
-    auth_obj = OauthService("", "taobao")
-    auth_obj.fetch_access_token()
+    auth_obj = OauthService("3381d99eab894f9b9263bcc33f7724fdc420b8bf", "pinduoduo")
+    auth_obj.fetch_pinduoduo_access_token()

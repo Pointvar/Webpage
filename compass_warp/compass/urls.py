@@ -17,16 +17,17 @@ from django.contrib import admin
 from django.urls import path
 from compass_warp.auth import view as auth_view
 from compass_warp.view.main import view as main_view
+from compass_warp.view.copy import view as copy_view
+
 from compass_warp.view.main import ajax_view as main_ajax_view
 from compass_warp.view.copy import ajax_view as copy_ajax_view
 
 handler404 = main_view.handler404
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("auth/taobao", auth_view.taobao_login),
-    path("auth/demo", main_view.handler404),
-    path("taobao_login", auth_view.taobao_login),
-    path("debug_login", auth_view.debug_login),
+    path("auth/pinduoduo_login", auth_view.pinduoduo_login),
+    path("sxdz_auth_pdd", auth_view.pinduoduo_login),
+    path("auth/debug_login", auth_view.debug_login),
+    path("link_copy", copy_view.link_copy, name="link_copy"),
 ]
 
 ajax_main_urlpatterns = [
@@ -39,3 +40,5 @@ ajax_copy_urlPatterns = [
 
 urlpatterns += ajax_main_urlpatterns
 urlpatterns += ajax_copy_urlPatterns
+
+# check

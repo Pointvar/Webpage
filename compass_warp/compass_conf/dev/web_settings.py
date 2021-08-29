@@ -14,10 +14,12 @@ import os
 import sys
 import socket
 
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(BASE_DIR))
+from compass_warp.compass_conf.set_env import set_path_env
+
+set_path_env()
 
 hostname = socket.gethostname()
 
@@ -36,7 +38,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    # "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -52,6 +54,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "common.auth_middleware.AuthMiddleware",
+    "common.excepition_middleware.ExceptionMiddleware",
 ]
 
 ROOT_URLCONF = "compass.urls"
@@ -150,11 +154,9 @@ STATICFILES_DIRS = [
 ]
 
 # Auth Backends
-AUTHENTICATION_BACKENDS = ["auth.backends.ZnzAuthBackend"]
+AUTHENTICATION_BACKENDS = ["auth.backends.OAuthBackend"]
 
 
-# OAUTH2配置文件
-SERVER_HOST = "www.wusetech.com"
 # # 淘宝
 # OAUTH_REDIRECT_TB = {"taobao": "https://{0}/auth/taobao".format(SERVER_HOST)}
 # APP_CONF_TB = {"APP_KEY": 23525554, "APP_SECRET": "a97d2c608806f706197c4e619e032b9b"}
@@ -166,13 +168,13 @@ SERVER_HOST = "www.wusetech.com"
 #     "redirect_url": OAUTH_REDIRECT_TB["taobao"],
 # }
 
+# OAUTH2配置文件
+SERVER_HOST = "dev.ituzan.com:8001"
 # 拼多多
-OAUTH_REDIRECT_PDD = {"taobao": "http://{0}/auth/pinduoduo".format(SERVER_HOST)}
+
+OAUTH_REDIRECT_PDD = "http://{0}/auth/pinduoduo".format(SERVER_HOST)
 APP_CONF_PDD = {"APP_KEY": "5d68faf8618e423295eb6ed7ab83905f", "APP_SECRET": "8ebb8796b3975cc36d5a5521380140e1ee675a4a"}
-OAUTH_CONF_PDD = {
-    "token_url": "https://oauth.taobao.com/token",
-    "auth_url": "https://oauth.taobao.com/authorize?response_type=code&client_id={0}&redirect_uri={1}&state=1212&view=web".format(
-        APP_CONF_TB["APP_KEY"], OAUTH_REDIRECT["taobao"]
-    ),
-    "redirect_url": OAUTH_REDIRECT_PDD["taobao"],
-}
+OAUTH_CONF_PDD = "https://fuwu.pinduoduo.com/service-market/auth?response_type=code&client_id={0}&redirect_uri={1}".format(
+    APP_CONF_PDD["APP_KEY"], OAUTH_REDIRECT_PDD
+)
+print(OAUTH_CONF_PDD)

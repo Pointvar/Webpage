@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.core.urlresolvers import reverse
 
 
 import logging
@@ -9,22 +8,26 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AuthMiddleware(object):
-    def process_request(self, request):
-        if not request.is_ajax():
-            return None
-        if isinstance(request.user, AnonymousUser):
-            return None
+class AuthMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
 
+    def __call__(self, request):
+        if not request.is_ajax():
+            return self.get_response(request)
+        if isinstance(request.user, AnonymousUser):
+            return self.get_response(request)
+
+        sid = request.user.username
         nick = request.user.first_name
-        username = request.user.username
-        if username.startswith("1000-"):
-            shop_info = {
-                "sid": username.split("-")[-1],
-                "nick": nick,
-                "soft_code": "kjsh",
-                "platform": "pinduoduo",
-                "first_come": request.user.date_joined,
-            }
+        platform, soft_code = request.user.email.split("^|$")
+        shop_info = {
+            "sid": sid,
+            "nick": nick,
+            "soft_code": soft_code,
+            "platform": platform,
+            "first_come": request.user.date_joined,
+        }
+
         request.shop_info = shop_info
-        return None
+        return self.get_response(request)

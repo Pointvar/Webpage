@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Modal } from "antd";
+axios.defaults.headers["X-Requested-With"] = "XMLHttpRequest";
 
 axios.interceptors.response.use(
   function (response) {

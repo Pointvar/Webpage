@@ -42,12 +42,13 @@ let webpackDev = merge(webpackBase, {
     contentBase: path.resolve(__dirname, "../build"),
     compress: true,
     writeToDisk: true,
+    disableHostCheck: true,
     watchOptions: {
       ignored: /node_modules/,
     },
     proxy: {
       "/ajax_": {
-        target: "http://localhost:8001/",
+        target: "http://localhost:80/",
       },
     },
   },
