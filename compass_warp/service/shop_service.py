@@ -1,4 +1,4 @@
-from shop_infos.shop_auth_db import ShopAuthDB
+from db_models.shop_infos.shop_auth_db import ShopAuthDB
 
 
 class ShopService:

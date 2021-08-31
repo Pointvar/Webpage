@@ -26,6 +26,7 @@ class AuthMiddleware:
             "nick": nick,
             "soft_code": soft_code,
             "platform": platform,
+            "source": "web-ajax{0}".format(request.path),
             "first_come": request.user.date_joined,
         }
 

@@ -1,3 +1,3 @@
-const pages = [{ entry: "link-copy" }, { entry: "index" }, { entry: "test" }];
+const pages = [{ entry: "link-copy" }, { entry: "copy_record" }];
 
 module.exports = pages;

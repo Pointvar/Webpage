@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class OAuthBackend:
     def authenticate(self, request, token=None, platform=None, soft_code=None):
         # username->sid email->platform,soft_code first_name->nick
+        # sid 为字符串
         oauth2 = OauthService(token, platform, soft_code)
         logger.info("[auth_backend] token:{0} platform:{1}".format(token, platform))
         oauth_info = oauth2.fetch_pinduoduo_oauth_info()

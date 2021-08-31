@@ -11,3 +11,7 @@ ajax_create_copy_task_schema = {
         "item_detail": {"type": "string"},
     },
 }
+ajax_get_copy_complex_tasks_schema = {
+    "type": "object",
+    "properties": {},
+}

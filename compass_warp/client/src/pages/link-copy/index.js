@@ -3,15 +3,7 @@ import ReactDOM from "react-dom";
 import { Provider, useDispatch } from "react-redux";
 import store from "@/store";
 
-import {
-  Form,
-  Input,
-  InputNumber,
-  Cascader,
-  Button,
-  Select,
-  Tooltip,
-} from "antd";
+import { Form, Input, InputNumber, Cascader, Button, Select, Tooltip } from "antd";
 import { Layout } from "antd";
 const { Content } = Layout;
 const { Option } = Select;
@@ -48,6 +40,7 @@ const initialValues = {
   price_set: {
     group_price: { times: 100, operator: "ADD", offset: 2 },
     singly_price: { times: 100, operator: "ADD", offset: 1 },
+    decimal_type: "CUT",
   },
 
   advanced_set: {
@@ -119,8 +112,7 @@ const CopyTabProps = {
                 rules={[
                   {
                     required: true,
-                    message:
-                      "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
+                    message: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
                   },
                 ]}
               >
@@ -346,8 +338,7 @@ const CopyTabProps = {
                 rules={[
                   {
                     required: true,
-                    message:
-                      "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
+                    message: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
                   },
                 ]}
               >
@@ -385,7 +376,7 @@ const CopyTabProps = {
 function LinkCopy() {
   const dispatch = useDispatch();
   const handlerSubmit = (data) => {
-    console.log(data);
+    data.copy_urls = data.copy_urls.split("\n");
     ajaxCreateCopyTask(data);
   };
   useEffect(() => {

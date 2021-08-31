@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def process_main(start_time, end_time):
     platform, soft_code = "pinduoduo", "kjsh"
-    user_info = dict(sid=0, nick="", platform=platform, soft_code=soft_code)
+    user_info = dict(sid="", nick="", platform=platform, soft_code=soft_code)
     vas_order_api = SearchPddVasOrder(user_info, "crontab_sync_order")
     shop_orders = vas_order_api.search_pdd_vas_order(start_time, end_time)
     for shop_order in shop_orders:
@@ -48,7 +48,7 @@ def process_main(start_time, end_time):
         )
         extra_dict = dict()
         for key in shop_order:
-            if key not in keys and key not in extra_keys:
+            if key not in keys and key not in extra_keys and key not in ["mall_id", "mall_name"]:
                 extra_dict[key] = shop_order[key]
 
         time_dict = dict(order_start=pay_time, order_end=order_end, order_create_time=create_time, order_pay_time=pay_time)
