@@ -12,6 +12,8 @@ import json
 import math
 import hashlib
 import requests
+from collections import ChainMap
+from itertools import product
 from furl import furl
 from random import randint
 from bs4 import BeautifulSoup
@@ -21,24 +23,21 @@ from pdd_models.get_pdd_goods_spec import GetPddGoodsSpec
 from pdd_models.get_pdd_goods_spec_id import GetPddGoodsSpecId
 from pdd_models.upload_pdd_goods_image import UploadPddGoodsImage
 from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
+from pdd_models.get_pdd_goods_cat_rule import GetPddGoodsCatRule
 
 
 from db_models.copy_infos.simple_task_db import CopySimpleTaskDB
 from db_models.copy_infos.complex_task_db import CopyComplexTaskDB
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # from spider_servers.proxy_agent_server.proxy_client import ProxyClient
 
 
 class CopyService:
-    h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D"
-    h5_desc_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdesc/6.0/?data=%7B%22id%22%3A%22{0}%22%2C%22type%22%3A%221%22%2C+%22f%22%3A%22%22%7D"
-    pc_1688_search_api = "https://search.1688.com/service/marketOfferResultViewService"
-    pc_1688_item_api = "https://detail.1688.com/offer/{0}.html"
-    pc_1688_video_api = "https://cloud.video.taobao.com/play/u/{0}/p/2/e/6/t/1/{1}.mp4"
-    wx_1688_shop_items_api = "https://winport.m.1688.com/winport/asyncView"
-    wx_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
-
     def __init__(self, sid, nick, platform, soft_code, source):
         self.sid = sid
         self.nick = nick
@@ -47,22 +46,294 @@ class CopyService:
         self.source = source
         self.user_info = dict(sid=sid, nick=nick, platform=platform, soft_code=soft_code)
         self.pdd_cat_map_api = GetPddGoodsOuterCatMapping(self.user_info, self.source)
+        self.pdd_get_cat_rule_api = GetPddGoodsCatRule(self.user_info, self.source)
         self.pdd_get_spec_api = GetPddGoodsSpec(self.user_info, self.source)
         self.pdd_get_spec_id_api = GetPddGoodsSpecId(self.user_info, self.source)
-        self.pdd_add_item = AddPddGoods(self.user_info, self.source)
-        self.pdd_upload_image = UploadPddGoodsImage(self.user_info, self.source)
+        self.pdd_add_item_api = AddPddGoods(self.user_info, self.source)
+        self.pdd_upload_image_api = UploadPddGoodsImage(self.user_info, self.source)
         self.copy_simple_task_db = CopySimpleTaskDB(sid, nick, platform, soft_code)
         self.copy_complex_task_db = CopyComplexTaskDB(sid, nick, platform, soft_code)
 
+    def _get_copy_url_info(self, copy_url):
+        parser_dict = furl(copy_url)
+        host = parser_dict.host
+        if "taobao" in host:
+            source = "taobao"
+            num_iid = parser_dict.args["id"]
+        elif "tmall" in host:
+            source = "tianmao"
+            num_iid = parser_dict.args["id"]
+        return source, num_iid
+
+    def _get_process_price(self, price_dict, price):
+        times, operator, offset = [price_dict[key] for key in ["times", "operator", "offset"]]
+        price = price * times / 100 + offset if operator == "ADD" else price * times / 100 - offset
+        return int(price * 100)
+
+    def _combine_sku_props(self, sku_props, sku_infos):
+        if len(sku_props) <= 2:
+            return sku_props, sku_infos
+        # 合并超过2组的sku信息
+        vid_maps = {}
+        combine_props = sku_props[1:]
+        for combine_prop in combine_props[1:]:
+            for value in combine_prop["values"]:
+                value["vid"] = ":".join([combine_prop["pid"], value["vid"]])
+        combine_values = map(lambda x: x["values"], combine_props)
+        for product_values in product(*combine_values):
+            old_vid, vid, name = product_values[0]["vid"], "", ""
+            for product_value in product_values:
+                vid += product_value["vid"]
+                name += product_value["name"]
+            vid_maps[old_vid] = dict(vid=vid, name=name)
+
+        process_props = sku_props[:2]
+        for value in process_props[1]["values"]:
+            value.update(vid_maps[value["vid"]])
+
+        for sku_info in sku_infos:
+            prop_paths = sku_info["propPath"].split(";")
+            propPath = ";".join([prop_paths[0], "".join(prop_paths[1:])])
+            sku_info["propPath"] = propPath
+        return process_props, sku_infos
+
+    def _get_response_by_url(self, url):
+        resp = requests.get(url, timeout=10)
+        return resp.content
+
+    def process_submit_by_upload_images(self, submit_dict):
+        # 上传解析完数据内图片
+        replace_info = {}
+        submit_str = json.dumps(submit_dict)
+        image_urls = set(re.findall(r'//img.alicdn.com/.*?(?=")', submit_str))
+        for image_url in image_urls:
+            prefix_image_url = "https:" + image_url
+            online_url = self.pdd_upload_image_api.upload_pdd_goods_image(prefix_image_url)
+            replace_info[image_url] = online_url
+        for replace_key, replace_value in replace_info.items():
+            submit_str = submit_str.replace(replace_key, replace_value)
+        submit_dict = json.loads(submit_str)
+        return submit_dict
+
     def save_copy_task(self, copy_urls, item_set, price_set, advanced_set):
+        # 保存复制任务
         amount = len(copy_urls)
         task_id = self.copy_simple_task_db.save_simple_task(item_set, price_set, advanced_set, amount)
-        for copy_url in copy_urls:
-            self.copy_complex_task_db.save_complex_task(task_id, copy_url)
+        for index, copy_url in enumerate(copy_urls):
+            source, num_iid = self._get_copy_url_info(copy_url)
+            self.copy_complex_task_db.save_complex_task(task_id, copy_url, source, num_iid, index, amount)
+
+    def get_copy_simple_task(self, task_id):
+        return self.copy_simple_task_db.get_simple_task_by_id(task_id)
 
     def get_copy_complex_tasks(self):
         complex_tasks = self.copy_complex_task_db.get_complex_tasks_by_sid()
         return complex_tasks
+
+    def get_wait_copy_complex_task(self):
+        copy_task = self.copy_complex_task_db.get_wait_complex_task()
+        return copy_task
+
+    def update_complex_task_by_params(self, in_id, update_dict):
+        self.copy_complex_task_db.update_complex_task_by_params(in_id, update_dict)
+
+    def get_taobao_item_api(self, num_iid):
+        input_params = dict(id=num_iid, apikey="uM4cTtNKxeCFH4K4i4pj5IHRo8KdJVjZ", info="all")
+        item_dict = {}
+        for count in range(3):
+            try:
+                resp = requests.get("http://api.ds.dingdanxia.com/shop/good_info", input_params, timeout=10)
+                resp = resp.json()
+                if resp["code"] == 200 and resp["data"]["data"]:
+                    item_dict = resp["data"]["data"]
+                    break
+            except Exception as e:
+                pass
+        return item_dict
+
+    def parse_taobao_item_api(self, item_dict):
+        # 解析订单侠淘宝商品信息
+
+        # 基本信息解析
+        keys = ["itemId", "title", "images", "categoryId", "rootCategoryId"]
+        num_iid, title, main_pics, category_id, root_category_id = [item_dict["item"][key] for key in keys]
+        # desc_url = "https://detail.tmall.com/templates/pages/desc?id={0}".format(num_iid)
+        # desc_html = self._get_response_by_url(desc_url)
+        detail_pics = []
+        keys = ["skuBase", "props", "mockData"]
+        sku_base, props, mock_data = [item_dict[key] for key in keys]
+
+        # SKU信息和价格
+        sku_props = sku_base["props"]
+        sku_infos = sku_base["skus"]
+        sku_prices = json.loads(mock_data)["skuCore"]["sku2info"]
+        for sku_info in sku_infos:
+            sku_price = sku_prices[sku_info["skuId"]]
+            sku_quantity = sku_price["quantity"]
+            sku_price = float(sku_price["price"]["priceText"])
+            sku_info.update(sku_quantity=sku_quantity, sku_price=sku_price)
+
+        # 基本属性和销售属性解析
+        base_props = props["groupProps"][0]["基本信息"]
+        item_price = max(map(lambda x: x["sku_price"], sku_infos))
+
+        item_info = dict(
+            base_info=dict(main_pics=main_pics, title=title, detail_pics=detail_pics),
+            props_info=dict(base_props=base_props, sku_props=sku_props),
+            sale_info=dict(item_price=item_price, sku_infos=sku_infos),
+            category_info=dict(category_id=category_id, root_category_id=root_category_id, category_name=""),
+        )
+        return item_info
+
+    def parser_item_to_pdd(self, item_info, item_set, price_set, advanced_set):
+        # 转换商品信息为拼多多提交数据
+        # 提交信息初始化
+        shipment_type = advanced_set["shipment_type"]
+        if shipment_type == "HOUR24":
+            shipment_second = 24 * 3600
+            fast_delivery = 0
+        elif shipment_type == "HOUR48":
+            shipment_second = 48 * 3600
+            fast_delivery = 0
+        else:
+            shipment_second = 0
+            fast_delivery = 1
+        ship_id = item_set["ship_id"]
+        pdd_submit = dict(
+            cost_template_id=ship_id,  # 运费模版
+            customer_num=2,  # 拼单人数
+            is_folt=True,  # 假一赔十
+            goods_type=1,  # 商品类型
+            country_id=0,  # 国家类型
+            second_hand=False,  # 二手
+            shipment_limit_second=shipment_second,  # 发货时间
+            delivery_one_day=fast_delivery,  # 当日发货
+            is_pre_sale=False,  # 预售
+            is_refundable=True,  # 7天无理由
+        )
+        # 基本信息提取
+        keys = ["base_info", "props_info", "sale_info", "category_info"]
+        base_info, props_info, sale_info, category_info = [item_info[key] for key in keys]
+        main_pics, title = [base_info[key] for key in ["main_pics", "title"]]
+        base_props, sku_props = [props_info[key] for key in ["base_props", "sku_props"]]
+        base_props = dict(ChainMap(*base_props))
+        category_id, category_name = [category_info[key] for key in ["category_id", "category_name"]]
+        item_price, sku_infos = [sale_info[key] for key in ["item_price", "sku_infos"]]
+        item_price = int(item_price)
+        # 商品类目关系映射 拼多多提供的API
+        category_info = self.pdd_cat_map_api.get_pdd_goods_outer_cat_mapping(category_id, category_name, title)
+        category_id = list(filter(bool, category_info))[-1]
+
+        # 处理商品属性规则
+        category_rule = self.pdd_get_cat_rule_api.get_pdd_goods_cat_rule(category_id)
+        propertie_rules = category_rule["goods_properties_rule"]["properties"]
+        goods_properties, success_properties = [], []  # TODO 属性对应关系数据库化
+        for propertie_rule in propertie_rules:
+            keys = ["name", "choose_max_num", "ref_pid", "property_value_type"]
+            propertie_name, choose_mark, ref_pid, prop_type = [propertie_rule[key] for key in keys]
+            choose_values = propertie_rule.get("values", [])  # 可选项
+            if propertie_name in base_props:
+                prop_dict = {}
+                propertie_value = base_props[propertie_name]
+                choose_values = [choose_value for choose_value in choose_values if choose_value["value"] == propertie_value]
+                if choose_values:
+                    vid = choose_values[0]["vid"]
+                    prop_dict = dict(ref_pid=ref_pid, vid=vid)
+                else:
+                    if not choose_mark:
+                        if prop_type == 0:
+                            value = str(propertie_value)
+                            prop_dict = dict(ref_pid=ref_pid, value=value)
+                        elif prop_type == 1:
+                            numbers = re.findall("\d+", str(propertie_value))
+                            if numbers:
+                                value = int(numbers[0])
+                                prop_dict = dict(ref_pid=ref_pid, value=value)
+                if prop_dict:
+                    goods_properties.append(prop_dict)
+                    success_properties.append(propertie_name)
+        fail_properties = [prop_name for prop_name in base_props if prop_name not in success_properties]
+
+        logger.info(
+            "PROCESS_PDD_PROPERTIES amount:{0} success:{1} fali:{2} fail_names:{3} choose_names:{4}".format(
+                len(base_props),
+                len(success_properties),
+                len(fail_properties),
+                "|".join(fail_properties),
+                "|".join(map(lambda x: x["name"], propertie_rules)),
+            )
+        )
+        pdd_submit.update(
+            goods_desc=title, goods_name=title, cat_id=category_id, carousel_gallery=main_pics, detail_gallery=main_pics
+        )
+
+        market_price = self._get_process_price(price_set["market_price"], item_price)
+
+        pdd_submit.update(market_price=market_price, goods_properties=goods_properties)
+        # 处理销售属性
+        sku_maps = {"颜色分类": "颜色"}  # TODO sku对应关系数据库化
+        pdd_skus = self.pdd_get_spec_api.get_pdd_goods_spec(category_id)
+        pdd_skus = {pdd_sku["parent_spec_name"]: pdd_sku["parent_spec_id"] for pdd_sku in pdd_skus}
+
+        sku_props, sku_infos = self._combine_sku_props(sku_props, sku_infos)
+
+        spec_id_maps, sku_image_maps = {}, {}
+        for sku_prop in sku_props:
+            sku_prop_id, sku_prop_name, sku_prop_values = [sku_prop[key] for key in ["pid", "name", "values"]]
+            sku_prop_name = sku_maps.get(sku_prop_name, sku_prop_name)
+            pdd_parent_id = pdd_skus[sku_prop_name]
+            for sku_prop_value in sku_prop_values:
+                value_id = sku_prop_value["vid"]
+                value_name = sku_prop_value["name"]
+                value_image = sku_prop_value.get("image")
+                pdd_spec_id = self.pdd_get_spec_id_api.get_pdd_goods_spec_id(pdd_parent_id, value_name)
+                spec_id_key = ":".join(map(str, [sku_prop_id, value_id]))
+                spec_id_maps[spec_id_key] = pdd_spec_id
+                if value_image:
+                    sku_image_maps[pdd_spec_id] = value_image
+
+        # 处理SKU信息
+        sku_list = []
+        for sku_info in sku_infos:
+            propPath, sku_quantity, sku_price = [sku_info[key] for key in ["propPath", "sku_quantity", "sku_price"]]
+            is_onsale = 1 if sku_quantity else 0
+            sku_init = dict(is_onsale=is_onsale, weight=1000, limit_quantity=999, quantity=sku_quantity)
+            spec_id_list, spec_id_keys = [], propPath.split(";")
+            for spec_id_key in spec_id_keys:
+                spec_id = spec_id_maps[spec_id_key]
+                spec_id_list.append(spec_id)
+            price = self._get_process_price(price_set["singly_price"], sku_price)
+            multi_price = self._get_process_price(price_set["group_price"], sku_price)
+            thumb_url = sku_image_maps.get(spec_id_list[0], main_pics[0])
+            sku_init.update(spec_id_list=spec_id_list, thumb_url=thumb_url, price=price, multi_price=multi_price)
+            sku_list.append(sku_init)
+        pdd_submit.update(sku_list=sku_list)
+        return pdd_submit
+
+    def add_pdd_item(self, item_submit):
+        # 提交到拼多多
+        return self.pdd_add_item_api.add_pdd_goods(item_submit)
+
+
+if __name__ == "__main__":
+    sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
+    copy_service = CopyService(sid, nick, platform, soft_code, source)
+    # item_html = copy_service.get_taobao_item_api(625435033956)
+    # print(copy_service.pdd_get_spec_api.get_pdd_goods_spec(8132))
+    # item_dict = copy_service.parse_taobao_item_api(item_html)
+    pdd_submit = copy_service.parser_item_to_pdd(item_dict, item_set, price_set, advanced_set)
+    pdd_submit = copy_service.process_submit_by_upload_images(pdd_submit)
+    print(pdd_submit)
+    copy_service.add_pdd_item(pdd_submit)
+
+
+# h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D"
+# h5_desc_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdesc/6.0/?data=%7B%22id%22%3A%22{0}%22%2C%22type%22%3A%221%22%2C+%22f%22%3A%22%22%7D"
+# pc_1688_search_api = "https://search.1688.com/service/marketOfferResultViewService"
+# pc_1688_item_api = "https://detail.1688.com/offer/{0}.html"
+# pc_1688_video_api = "https://cloud.video.taobao.com/play/u/{0}/p/2/e/6/t/1/{1}.mp4"
+# wx_1688_shop_items_api = "https://winport.m.1688.com/winport/asyncView"
+# wx_user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
 
 #     def map_api_url_to_id(self, htmls, url_maps):
@@ -73,33 +344,6 @@ class CopyService:
 #             new_htmls[api_id] = html
 #         return new_htmls
 
-#     def map_list_to_dict(self, datas, map_info):
-#         # 把list映射成dict
-#         key, value = map_info
-#         new_dict = {data[key]: data[value] for data in datas}
-#         return new_dict
-
-#     def add_http_schema(self, image_urls):
-#         # 补全图片url
-#         image_urls = list(map(lambda x: "https:" + x, image_urls))
-#         return image_urls
-
-#     def upload_images_by_submit(self, submit, submit_type):
-#         # 上传解析完数据内图片
-#         replace_info = {}
-#         submit_str = json.dumps(submit)
-#         image_urls = set(re.findall(r'https://img.alicdn.com/.*?(?=")', submit_str))
-#         for image_url in image_urls:
-#             online_url = self.pdd_upload_image.upload_pdd_goods_image(image_url)
-#             replace_info[image_url] = online_url
-#         return submit_str, replace_info
-
-#     def replace_submit_images(self, submit_str, replace_info):
-#         # 替换解析后图片数据
-#         for replace_key, replace_value in replace_info.items():
-#             submit_str = submit_str.replace(replace_key, replace_value)
-#         submit = json.loads(submit_str)
-#         return submit
 
 #     def get_spider_infos_by_proxy(self, spider_urls, spider_type, source):
 #         # 使用HTTP代理获取html
@@ -300,75 +544,7 @@ class CopyService:
 #         )
 #         return item_info
 
-#     def parser_item_to_pdd(self, item_info):
-#         # 转换商品信息为拼多多提交数据
-#         # 提交信息初始化
-#         pdd_submit = dict(
-#             cost_template_id=3442958,
-#             customer_num=2,
-#             is_folt=True,
-#             goods_type=1,
-#             country_id=0,
-#             second_hand=False,
-#             shipment_limit_second=172800,
-#             delivery_one_day=0,
-#             is_pre_sale=False,
-#             is_refundable=True,
-#         )
-#         # 基本信息提取
-#         keys = ["base_info", "props_info", "sale_info", "category_info"]
-#         base_info, props_info, sale_info, category_info = [item_info[key] for key in keys]
-#         main_pics, title = [base_info[key] for key in ["main_pics", "title"]]
-#         base_props, sku_props = [props_info[key] for key in ["base_props", "sku_props"]]
-#         category_id, category_name = [category_info[key] for key in ["category_id", "category_name"]]
-#         item_price, sku_infos = [sale_info[key] for key in ["item_price", "sku_infos"]]
-#         item_price = int(item_price)
-#         # 商品类目关系映射 拼多多提供的API
-#         category_info = self.pdd_cat_map_api.get_pdd_goods_outer_cat_mapping(category_id, category_name, title)
-#         category_id = category_info[-1]
-#         # 更新提交信息
-#         pdd_submit.update(
-#             cat_id=category_id,
-#             carousel_gallery=main_pics,
-#             detail_gallery=main_pics,
-#             goods_desc=title,
-#             goods_name=title,
-#             market_price=item_price + 1000,
-#         )
-#         # 处理销售属性
-#         sku_maps = {"颜色分类": "颜色"}
-#         pdd_skus = self.pdd_get_spec_api.get_pdd_goods_spec(category_id)
-#         pdd_skus = self.map_list_to_dict(pdd_skus, ["parent_spec_name", "parent_spec_id"])
-
-#         spec_id_maps = {}
-#         for sku_prop in sku_props:
-#             sku_prop_id, sku_old_name, sku_prop_values = [sku_prop[key] for key in ["pid", "name", "values"]]
-#             sku_new_name = sku_maps.get(sku_old_name, "颜色")
-#             parent_spec_id = pdd_skus[sku_new_name]
-
-#             for sku_prop_value in sku_prop_values:
-#                 value_id = sku_prop_value["vid"]
-#                 value_name = sku_prop_value["name"]
-#                 spec_id = self.pdd_get_spec_id_api.get_pdd_goods_spec_id(parent_spec_id, value_name)
-#                 spec_id_key = ":".join(map(str, [sku_prop_id, value_id]))
-#                 spec_id_maps[spec_id_key] = spec_id
-#         # 处理SKU信息
-#         sku_list = []
-#         for sku_info in sku_infos:
-#             sku_init = dict(is_onsale=1, weight=1000, limit_quantity=999, quantity=0)
-#             propPath, sku_quantity, sku_price = [sku_info[key] for key in ["propPath", "sku_quantity", "sku_price"]]
-#             spec_id_list, spec_id_keys = [], propPath.split(";")
-#             for spec_id_key in spec_id_keys:
-#                 spec_id = spec_id_maps[spec_id_key]
-#                 spec_id_list.append(spec_id)
-#             sku_init.update(spec_id_list=spec_id_list, thumb_url=main_pics[0], price=item_price, multi_price=item_price - 1000)
-#             sku_list.append(sku_init)
-#         pdd_submit.update(sku_list=sku_list)
-#         return pdd_submit
-
-#     def add_pdd_item(self, item_submit):
-#         # 提交到拼多多
-#         return self.pdd_add_item.add_pdd_goods(item_submit)
+#
 
 
 # # 测试用例
@@ -486,11 +662,3 @@ class CopyService:
 #     import pdb
 
 #     pdb.set_trace()
-
-
-if __name__ == "__main__":
-    pass
-    # # taobao_pdd_test(595183899574)
-    # # alibaba_search_test("法式复古连衣裙夏", "va_rmdarkgmv30rt", True)
-    # alibaba_shop_items_test("https://qiyilianmd.1688.com/")
-    # # alibaba_item_test(592225001643)

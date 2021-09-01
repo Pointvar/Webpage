@@ -267,7 +267,7 @@ const CopyTabProps = {
                 <Form.Item label="市场价格">
                   <Input.Group compact>
                     <span>市场价格 = 原市场价格 × </span>
-                    <Form.Item name={["price_set", "group_price", "times"]}>
+                    <Form.Item name={["price_set", "market_price", "times"]}>
                       <InputNumber
                         min={0}
                         max={100}
