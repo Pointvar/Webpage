@@ -28,6 +28,7 @@
     "webpack-merge": "^5.8.0"
   },
   "dependencies": {
+    "@ant-design/icons": "^4.6.4",
     "@reduxjs/toolkit": "^1.6.1",
     "antd": "^4.16.11",
     "axios": "^0.21.1",

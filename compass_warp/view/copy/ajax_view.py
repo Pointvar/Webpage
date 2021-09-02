@@ -18,6 +18,18 @@ def ajax_create_copy_task(request):
     return JsonResponse(return_dict)
 
 
+@ajax_json_validate(ajax_get_logistic_templates_schema)
+def ajax_get_logistic_templates(request):
+    return_dict = {"success": True, "data": ""}
+    shop_info = request.shop_info
+    keys = ["sid", "nick", "platform", "soft_code", "source"]
+    sid, nick, platform, soft_code, source = [shop_info[key] for key in keys]
+    copy_service = CopyService(sid, nick, platform, soft_code, source)
+    logistic_templates = copy_service.get_logistic_templates()
+    return_dict["data"] = logistic_templates
+    return JsonResponse(return_dict)
+
+
 @ajax_json_validate(ajax_get_copy_complex_tasks_schema)
 def ajax_get_copy_complex_tasks(request):
     return_dict = {"success": True, "data": ""}
@@ -25,6 +37,21 @@ def ajax_get_copy_complex_tasks(request):
     keys = ["sid", "nick", "platform", "soft_code", "source"]
     sid, nick, platform, soft_code, source = [shop_info[key] for key in keys]
     copy_service = CopyService(sid, nick, platform, soft_code, source)
-    complex_tasks = copy_service.get_copy_complex_tasks()
+    complex_tasks = copy_service.get_show_complex_tasks()
+    return_dict["data"] = complex_tasks
+    return JsonResponse(return_dict)
+
+
+@ajax_json_validate(ajax_hide_copy_complex_tasks_schema)
+def ajax_hide_copy_complex_tasks(request):
+    return_dict = {"success": True, "data": ""}
+    shop_info = request.shop_info
+    keys = ["sid", "nick", "platform", "soft_code", "source"]
+    sid, nick, platform, soft_code, source = [shop_info[key] for key in keys]
+    in_ids = request.json["in_ids"]
+    copy_service = CopyService(sid, nick, platform, soft_code, source)
+    update_dict = dict(hide_status=True)
+    copy_service.update_complex_task_by_params(in_ids, update_dict)
+    complex_tasks = copy_service.get_show_complex_tasks()
     return_dict["data"] = complex_tasks
     return JsonResponse(return_dict)

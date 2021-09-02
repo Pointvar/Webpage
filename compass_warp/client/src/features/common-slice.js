@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ajaxGetShopInfo } from "@/apis";
 
 // ActionCreators
-export const getShopInfo = createAsyncThunk("common/getShopInfo", async (data) => {
+export const getShopInfo = createAsyncThunk("common/getShopInfo", async (data = {}) => {
   const shopInfo = await ajaxGetShopInfo(data);
   return shopInfo;
 });

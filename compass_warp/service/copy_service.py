@@ -24,6 +24,7 @@ from pdd_models.get_pdd_goods_spec_id import GetPddGoodsSpecId
 from pdd_models.upload_pdd_goods_image import UploadPddGoodsImage
 from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
 from pdd_models.get_pdd_goods_cat_rule import GetPddGoodsCatRule
+from pdd_models.get_pdd_goods_logistics_template import GetPddGoodsLogisticsTemplate
 
 
 from db_models.copy_infos.simple_task_db import CopySimpleTaskDB
@@ -51,6 +52,7 @@ class CopyService:
         self.pdd_get_spec_id_api = GetPddGoodsSpecId(self.user_info, self.source)
         self.pdd_add_item_api = AddPddGoods(self.user_info, self.source)
         self.pdd_upload_image_api = UploadPddGoodsImage(self.user_info, self.source)
+        self.pdd_get_logistic_api = GetPddGoodsLogisticsTemplate(self.user_info, self.source)
         self.copy_simple_task_db = CopySimpleTaskDB(sid, nick, platform, soft_code)
         self.copy_complex_task_db = CopyComplexTaskDB(sid, nick, platform, soft_code)
 
@@ -101,19 +103,10 @@ class CopyService:
         resp = requests.get(url, timeout=10)
         return resp.content
 
-    def process_submit_by_upload_images(self, submit_dict):
-        # 上传解析完数据内图片
-        replace_info = {}
-        submit_str = json.dumps(submit_dict)
-        image_urls = set(re.findall(r'//img.alicdn.com/.*?(?=")', submit_str))
-        for image_url in image_urls:
-            prefix_image_url = "https:" + image_url
-            online_url = self.pdd_upload_image_api.upload_pdd_goods_image(prefix_image_url)
-            replace_info[image_url] = online_url
-        for replace_key, replace_value in replace_info.items():
-            submit_str = submit_str.replace(replace_key, replace_value)
-        submit_dict = json.loads(submit_str)
-        return submit_dict
+    def get_logistic_templates(self):
+        # 获取后台的运费模版信息
+        logistic_templates = self.pdd_get_logistic_api.get_pdd_goods_logistics_template()
+        return logistic_templates
 
     def save_copy_task(self, copy_urls, item_set, price_set, advanced_set):
         # 保存复制任务
@@ -126,16 +119,16 @@ class CopyService:
     def get_copy_simple_task(self, task_id):
         return self.copy_simple_task_db.get_simple_task_by_id(task_id)
 
-    def get_copy_complex_tasks(self):
-        complex_tasks = self.copy_complex_task_db.get_complex_tasks_by_sid()
+    def get_show_complex_tasks(self):
+        complex_tasks = self.copy_complex_task_db.get_show_complex_tasks()
         return complex_tasks
 
     def get_wait_copy_complex_task(self):
         copy_task = self.copy_complex_task_db.get_wait_complex_task()
         return copy_task
 
-    def update_complex_task_by_params(self, in_id, update_dict):
-        self.copy_complex_task_db.update_complex_task_by_params(in_id, update_dict)
+    def update_complex_task_by_params(self, in_ids, update_dict):
+        self.copy_complex_task_db.update_complex_task_by_params(in_ids, update_dict)
 
     def get_taobao_item_api(self, num_iid):
         input_params = dict(id=num_iid, apikey="uM4cTtNKxeCFH4K4i4pj5IHRo8KdJVjZ", info="all")
@@ -310,6 +303,20 @@ class CopyService:
         pdd_submit.update(sku_list=sku_list)
         return pdd_submit
 
+    def process_submit_by_upload_images(self, submit_dict):
+        # 上传解析完数据内图片
+        replace_info = {}
+        submit_str = json.dumps(submit_dict)
+        image_urls = set(re.findall(r'//img.alicdn.com/.*?(?=")', submit_str))
+        for image_url in image_urls:
+            prefix_image_url = "https:" + image_url
+            online_url = self.pdd_upload_image_api.upload_pdd_goods_image(prefix_image_url)
+            replace_info[image_url] = online_url
+        for replace_key, replace_value in replace_info.items():
+            submit_str = submit_str.replace(replace_key, replace_value)
+        submit_dict = json.loads(submit_str)
+        return submit_dict
+
     def add_pdd_item(self, item_submit):
         # 提交到拼多多
         return self.pdd_add_item_api.add_pdd_goods(item_submit)
@@ -318,13 +325,14 @@ class CopyService:
 if __name__ == "__main__":
     sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
+    print(copy_service.get_logistic_templates())
     # item_html = copy_service.get_taobao_item_api(625435033956)
     # print(copy_service.pdd_get_spec_api.get_pdd_goods_spec(8132))
     # item_dict = copy_service.parse_taobao_item_api(item_html)
-    pdd_submit = copy_service.parser_item_to_pdd(item_dict, item_set, price_set, advanced_set)
-    pdd_submit = copy_service.process_submit_by_upload_images(pdd_submit)
-    print(pdd_submit)
-    copy_service.add_pdd_item(pdd_submit)
+    # pdd_submit = copy_service.parser_item_to_pdd(item_dict, item_set, price_set, advanced_set)
+    # pdd_submit = copy_service.process_submit_by_upload_images(pdd_submit)
+    # print(pdd_submit)
+    # copy_service.add_pdd_item(pdd_submit)
 
 
 # h5_item_api = "https://h5api.m.taobao.com/h5/mtop.taobao.detail.getdetail/6.0/?data=%7B%22itemNumId%22%3A%22{0}%22%7D"

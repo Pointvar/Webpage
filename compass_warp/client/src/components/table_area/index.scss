@@ -1,26 +1,28 @@
-.input-area-box {
-  .platforms {
+.table-area-box {
+  .table_header {
     display: flex;
-    img {
-      height: 32px;
-      margin-left: 10px;
+    align-items: center;
+    justify-content: space-between;
+    .filter_box {
+      display: flex;
+      .filter_element {
+        display: flex;
+        align-items: center;
+        margin-left: 6px;
+        .ant-input-group-wrapper {
+          width: auto;
+        }
+      }
     }
-    .input_tips {
-      font-size: 16px;
-      font-weight: 625;
-      width: 75px;
-    }
-  }
-  .input-area {
-    display: flex;
-    margin-top: 24px;
-    .input_tips {
-      font-size: 16px;
-      font-weight: 625;
-      width: 75px;
-    }
-    .ant-form-item {
-      flex-grow: 1;
+    .operator {
+      display: flex;
+      align-items: center;
+      .operator_info {
+        margin-right: 32px;
+      }
+      .selectMessage {
+        color: red;
+      }
     }
   }
 }

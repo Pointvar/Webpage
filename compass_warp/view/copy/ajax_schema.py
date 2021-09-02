@@ -15,3 +15,15 @@ ajax_get_copy_complex_tasks_schema = {
     "type": "object",
     "properties": {},
 }
+
+ajax_get_logistic_templates_schema = {
+    "type": "object",
+    "properties": {},
+}
+
+ajax_hide_copy_complex_tasks_schema = {
+    "type": "object",
+    "properties": {
+        "in_ids": __string_list_schema,
+    },
+}

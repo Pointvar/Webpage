@@ -36,7 +36,9 @@ ajax_main_urlpatterns = [
 
 ajax_copy_urlPatterns = [
     path("ajax_create_copy_task", copy_ajax_view.ajax_create_copy_task),
+    path("ajax_hide_copy_complex_tasks", copy_ajax_view.ajax_hide_copy_complex_tasks),
     path("ajax_get_copy_complex_tasks", copy_ajax_view.ajax_get_copy_complex_tasks),
+    path("ajax_get_logistic_templates", copy_ajax_view.ajax_get_logistic_templates),
 ]
 
 urlpatterns += ajax_main_urlpatterns

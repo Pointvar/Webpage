@@ -1,9 +1,10 @@
 import React, { Fragment, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { Provider, useDispatch } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store";
 
 import { Form, Input, InputNumber, Cascader, Button, Select, Tooltip } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
 import { Layout } from "antd";
 const { Content } = Layout;
 const { Option } = Select;
@@ -15,7 +16,7 @@ import PageFooter from "@/components/page-footer";
 
 import { NAV_MENUS } from "@/constants/common";
 import { getShopInfo } from "@/features/common-slice";
-import { ajaxCreateCopyTask } from "@/apis";
+import { getLogisticTemplates, selectlogisticTemplates, createCopyTask } from "@/features/copy-slice";
 
 import "antd/dist/antd.css";
 import "./index.scss";
@@ -38,8 +39,9 @@ const initialValues = {
     custom_category: null,
   },
   price_set: {
-    group_price: { times: 100, operator: "ADD", offset: 2 },
+    group_price: { times: 100, operator: "ADD", offset: 0 },
     singly_price: { times: 100, operator: "ADD", offset: 1 },
+    market_price: { times: 100, operator: "ADD", offset: 2 },
     decimal_type: "CUT",
   },
 
@@ -97,73 +99,44 @@ const CopyTabProps = {
         {
           label: "商品类目",
           name: ["item_set", "categray"],
-          type: "radio",
+          type: "radio_select",
           defaultValue: "AUTO",
           selectInfos: [
             { key: "AUTO", value: "智能匹配" },
             { key: "MANUAL", value: "手动选择" },
           ],
-          tips: "设置复制后商品的类目。智能匹配：AI智能根据商品来源选择合适的商品类目，手工选择：用户可以自定义选择商品类目。",
+          tips: (
+            <span>
+              设置复制后商品的类目
+              <hr />
+              ①智能匹配: 智能AI自动选择合适的商品类目。
+              <br />
+              ②手工选择: 用户手动自定义选择商品类目。
+            </span>
+          ),
           component: {
             showValue: "MANUAL",
-            fragment: (
-              <Form.Item
-                name={["item_set", "custom_category"]}
-                rules={[
-                  {
-                    required: true,
-                    message: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
-                  },
-                ]}
-              >
-                <Cascader
-                  options={options}
-                  changeOnSelect
-                  placeholder="提示：请点击输入商品类目。"
-                  style={{ width: "300px" }}
-                />
-              </Form.Item>
-            ),
+            name: ["item_set", "custom_category"],
+            placeholder: "提示: 请点击选择商品类目",
+            ruleMessage: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目！",
+            optionInfos: [],
           },
         },
         {
-          type: "component",
-          component: {
-            showValue: true,
-            fragment: (
-              <div className="prop-box">
-                <Form.Item
-                  label={
-                    <Tooltip
-                      title={
-                        "设置复制后商品的运费模版。默认选择第一个有效的运费模版，若无运费模版，点击下拉框内创建运费模版按钮后前往平台创建运费模版。然后刷新当前页面重新加载刚创建的用户模版。"
-                      }
-                    >
-                      {"运费模版"}
-                    </Tooltip>
-                  }
-                  name={["item_set", "ship_id"]}
-                >
-                  <Select style={{ width: "140px" }}>
-                    <Option value="ADD">加</Option>
-                    <Option value="SUB">减</Option>
-                  </Select>
-                </Form.Item>
-              </div>
-            ),
-          },
-        },
-        {
-          label: "商品详情",
-          name: ["item_set", "item_detail"],
-          type: "radio",
-          defaultValue: "AUTO",
-          selectInfos: [
-            { key: "AUTO", value: "自动" },
-            { key: "PC", value: "电脑端" },
-            { key: "WX", value: "手机端" },
-          ],
-          tips: "设置搬家后商品详情页使用源宝贝的哪种详情页。自动: 根据原商品是电脑端还是手机端自动确定",
+          label: "运费模版",
+          name: ["item_set", "ship_id"],
+          type: "select",
+          defaultValue: null,
+          selectInfos: [],
+          tips: (
+            <span>
+              设置复制后商品的运费模版
+              <hr />
+              ①若有运费模版，默认选择第一个运费模版。
+              <br />
+              ②若无运费模版，请点击右侧创建运费模版按钮。创建后刷新当前页面！
+            </span>
+          ),
         },
         {
           label: "商品状态",
@@ -175,7 +148,17 @@ const CopyTabProps = {
             { key: "STOCK", value: "仓库中" },
             { key: "DRAFT", value: "草稿箱" },
           ],
-          tips: "设置搬家后商品的状态。",
+          tips: (
+            <span>
+              设置搬家后商品的状态
+              <hr />
+              ①出售中: 将商品上架，展示在出售中。
+              <br />
+              ②仓库中: 将商品下架，展示在仓库中。
+              <br />
+              ②草稿箱: 将商品提交到草稿箱，展示在草稿箱中。
+            </span>
+          ),
         },
         {
           label: "商品过滤",
@@ -186,7 +169,7 @@ const CopyTabProps = {
             { key: true, value: "过滤已复制商品" },
             { key: false, value: "不过滤已复制商品" },
           ],
-          tips: "设置是否过滤曾经搬家过的商品链接。",
+          tips: <span>设置是否过滤曾经搬家过的商品链接</span>,
         },
       ],
     },
@@ -195,112 +178,46 @@ const CopyTabProps = {
       tabTitle: "价格设置",
       tabContents: [
         {
-          type: "component",
+          label: "拼单价格",
+          name: ["price_set", "group_price"],
+          type: "price_set",
           component: {
             showValue: true,
-            fragment: (
-              <div className="prop-box">
-                <Form.Item label="拼单价格">
-                  <Input.Group compact>
-                    <span>拼单价格 = 原商品价格 × </span>
-                    <Form.Item name={["price_set", "group_price", "times"]}>
-                      <InputNumber
-                        min={0}
-                        max={100}
-                        formatter={(value) => `${value}%`}
-                        parser={(value) => value.replace("%", "")}
-                      />
-                    </Form.Item>
-                    <Form.Item name={["price_set", "group_price", "operator"]}>
-                      <Select>
-                        <Option value="ADD">加</Option>
-                        <Option value="SUB">减</Option>
-                      </Select>
-                    </Form.Item>
-                    <Form.Item name={["price_set", "group_price", "offset"]}>
-                      <InputNumber min={0} max={100} />
-                    </Form.Item>
-                  </Input.Group>
-                </Form.Item>
-              </div>
-            ),
+            priceNames: {
+              time: ["price_set", "group_price", "times"],
+              operator: ["price_set", "group_price", "operator"],
+              offset: ["price_set", "group_price", "offset"],
+            },
+            prefix: "拼单价格 = 原商品价格 x",
           },
         },
         {
-          type: "component",
+          label: "单买价格",
+          name: ["price_set", "singly_price"],
+          type: "price_set",
           component: {
             showValue: true,
-            fragment: (
-              <div className="prop-box">
-                <Form.Item label="单买价格">
-                  <Input.Group compact>
-                    <span>单买价格 = 原商品价格 × </span>
-                    <Form.Item name={["price_set", "singly_price", "times"]}>
-                      <InputNumber
-                        min={0}
-                        max={100}
-                        formatter={(value) => `${value}%`}
-                        parser={(value) => value.replace("%", "")}
-                      />
-                    </Form.Item>
-                    <Form.Item name={["price_set", "singly_price", "operator"]}>
-                      <Select>
-                        <Option value="ADD">加</Option>
-                        <Option value="SUB">减</Option>
-                      </Select>
-                    </Form.Item>
-                    <Form.Item name={["price_set", "singly_price", "offset"]}>
-                      <InputNumber min={0} max={100} />
-                    </Form.Item>
-                  </Input.Group>
-                </Form.Item>
-              </div>
-            ),
+            priceNames: {
+              time: ["price_set", "singly_price", "times"],
+              operator: ["price_set", "singly_price", "operator"],
+              offset: ["price_set", "singly_price", "offset"],
+            },
+            prefix: "单买价格 = 原商品价格 x",
           },
         },
         {
-          type: "component",
+          label: "市场价格",
+          name: ["price_set", "market_price"],
+          type: "price_set",
           component: {
             showValue: true,
-            fragment: (
-              <div className="prop-box">
-                <Form.Item label="市场价格">
-                  <Input.Group compact>
-                    <span>市场价格 = 原市场价格 × </span>
-                    <Form.Item name={["price_set", "market_price", "times"]}>
-                      <InputNumber
-                        min={0}
-                        max={100}
-                        formatter={(value) => `${value}%`}
-                        parser={(value) => value.replace("%", "")}
-                      />
-                    </Form.Item>
-                    <Form.Item name={["price_set", "group_price", "operator"]}>
-                      <Select>
-                        <Option value="ADD">加</Option>
-                        <Option value="SUB">减</Option>
-                      </Select>
-                    </Form.Item>
-                    <Form.Item name={["price_set", "group_price", "offset"]}>
-                      <InputNumber min={0} max={100} />
-                    </Form.Item>
-                  </Input.Group>
-                </Form.Item>
-              </div>
-            ),
+            priceNames: {
+              time: ["price_set", "market_price", "times"],
+              operator: ["price_set", "market_price", "operator"],
+              offset: ["price_set", "market_price", "offset"],
+            },
+            prefix: "市场价格 = 原市场价格 x",
           },
-        },
-        {
-          label: "价格处理",
-          name: ["price_set", "decimal_type"],
-          type: "radio",
-          defaultValue: "CUT",
-          selectInfos: [
-            { key: "CUT", value: "截取2位小数" },
-            { key: "ROUND", value: "四舍五入保留2位小数" },
-            { key: "DROP", value: "舍弃小数部分" },
-          ],
-          tips: "设置搬家后商品详情页使用源宝贝的哪种详情页\n1.自动: 根据原商品自动确定",
         },
       ],
     },
@@ -318,54 +235,41 @@ const CopyTabProps = {
             { key: "FRONT", value: "截取前面30个字符" },
             { key: "END", value: "截取后面30个字符" },
           ],
-          tips: "设置搬家后商品详情页使用源宝贝的哪种详情页\n1.自动: 根据原商品自动确定",
+          tips: <span>设置搬家后商品的标题</span>,
         },
         {
           label: "商品库存",
           name: ["advanced_set", "item_stock"],
-          type: "radio",
+          type: "radio_inputnum",
           defaultValue: "KEEP",
           selectInfos: [
             { key: "KEEP", value: "保持原库存" },
             { key: "MANUAL", value: "自定义库存" },
           ],
-          tips: "xxxx222",
+          tips: <span>设置搬家后商品的库存</span>,
           component: {
             showValue: "MANUAL",
-            fragment: (
-              <Form.Item
-                name={["advanced_set", "custom_stock"]}
-                rules={[
-                  {
-                    required: true,
-                    message: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目。",
-                  },
-                ]}
-              >
-                <InputNumber min={0} max={100000} />
-              </Form.Item>
-            ),
+            name: ["advanced_set", "custom_stock"],
+            ruleMessage: "检测到自定义库存为空，请输入库存。",
           },
         },
         {
           label: "发货时效",
           name: ["advanced_set", "shipment_type"],
           type: "radio",
-          defaultValue: "HOUR12",
+          defaultValue: "HOUR24",
           selectInfos: [
-            { key: "HOUR12", value: "当天发货" },
             { key: "HOUR24", value: "24小时内" },
             { key: "HOUR48", value: "48小时内" },
+            { key: "HOUR12", value: "当天发货" },
           ],
-          tips: "设置搬家后商品详情页使用源宝贝的哪种详情页\n1.自动: 根据原商品自动确定",
-        },
-        {
-          label: "商品标注",
-          name: ["advanced_set", "item_track"],
-          type: "radio",
-          defaultValue: "DEFAULT",
-          selectInfos: [{ key: "DEFAULT", value: "源平台标识-源宝贝编号" }],
-          tips: "设置搬家后商品详情页使用源宝贝的哪种详情页\n1.自动: 根据原商品自动确定",
+          tips: (
+            <span>
+              设置搬家后商品的发货时效
+              <hr />
+              ①按照实际发货时效选择，默认为24小时内发货
+            </span>
+          ),
         },
       ],
     },
@@ -375,18 +279,21 @@ const CopyTabProps = {
 // 一键复制页面主体
 function LinkCopy() {
   const dispatch = useDispatch();
-  const handlerSubmit = (data) => {
+  const handlerCopySubmit = (data) => {
     data.copy_urls = data.copy_urls.split("\n");
-    ajaxCreateCopyTask(data);
+    dispatch(createCopyTask(data));
   };
   useEffect(() => {
     dispatch(getShopInfo());
+    dispatch(getLogisticTemplates());
   }, []);
+  const logisticTemplates = useSelector(selectlogisticTemplates);
+  console.log("x", logisticTemplates);
   return (
     <Fragment>
       <PageHeader {...headerProps} />
       <Content>
-        <Form initialValues={initialValues} onFinish={handlerSubmit}>
+        <Form initialValues={initialValues} onFinish={handlerCopySubmit}>
           <InputArea />
           <PropTabs {...CopyTabProps} />
           <Form.Item>
@@ -407,3 +314,56 @@ ReactDOM.render(
   </Provider>,
   document.getElementById("root")
 );
+
+// {
+//   label: "价格处理",
+//   name: ["price_set", "decimal_type"],
+//   type: "radio",
+//   defaultValue: "CUT",
+//   selectInfos: [
+//     { key: "CUT", value: "截取2位小数" },
+//     { key: "ROUND", value: "四舍五入保留2位小数" },
+//     { key: "DROP", value: "舍弃小数部分" },
+//   ],
+//   tips: "设置搬家后商品详情页使用源宝贝的哪种详情页\n1.自动: 根据原商品自动确定",
+//   <span>
+//   设置商品的价格如何处理
+//   <hr />
+//   ①截取2位小数: 直接截取2位小数 eg:如果原价格100.345。
+//   <br />
+//   ②仓库中: 将商品下架，展示在仓库中。
+//   <br />
+//   ②草稿箱: 将商品提交到草稿箱，展示在草稿箱中。
+// </span>
+// },
+
+// {
+//   label: "商品详情",
+//   name: ["item_set", "item_detail"],
+//   type: "radio",
+//   defaultValue: "AUTO",
+//   selectInfos: [
+//     { key: "AUTO", value: "自动" },
+//     { key: "PC", value: "电脑端" },
+//     { key: "WX", value: "手机端" },
+//   ],
+//   tips: (
+//     <span>
+//       设置搬家后商品详情页使用源宝贝的哪种详情页
+//       <hr />
+//       ①自动: 根据源商品链接自动确定
+//       <br />
+//       ②电脑端: 使用电脑端详情页
+//       <br />
+//       ②手机端: 使用电脑端详情页
+//     </span>
+//   ),
+// },
+// {
+//   label: "商品标注",
+//   name: ["advanced_set", "item_track"],
+//   type: "radio",
+//   defaultValue: "DEFAULT",
+//   selectInfos: [{ key: "DEFAULT", value: "源平台标识-源宝贝编号" }],
+//   tips: "设置搬家后商品详情页使用源宝贝的哪种详情页\n1.自动: 根据原商品自动确定",
+// },
