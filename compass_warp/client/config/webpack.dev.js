@@ -48,7 +48,7 @@ let webpackDev = merge(webpackBase, {
     },
     proxy: {
       "/ajax_": {
-        target: "http://localhost:80/",
+        target: "http://localhost:8001/",
       },
     },
   },

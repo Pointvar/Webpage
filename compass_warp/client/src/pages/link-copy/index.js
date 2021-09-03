@@ -90,7 +90,7 @@ const options = [
 ];
 
 const CopyTabProps = {
-  activeTab: "price_set",
+  activeTab: "item_set",
   tabInfos: [
     {
       tabKey: "item_set",
@@ -119,7 +119,7 @@ const CopyTabProps = {
             name: ["item_set", "custom_category"],
             placeholder: "提示: 请点击选择商品类目",
             ruleMessage: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目！",
-            optionInfos: [],
+            optionInfos: options,
           },
         },
         {
@@ -278,24 +278,35 @@ const CopyTabProps = {
 
 // 一键复制页面主体
 function LinkCopy() {
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const logisticTemplates = useSelector(selectlogisticTemplates);
+
+  useEffect(() => {
+    dispatch(getShopInfo());
+    dispatch(getLogisticTemplates());
+    // logisticTemplates.length && form.setFieldsValue({ item_set: { ship_id: logisticTemplates[0].key } });
+  }, []);
+  if (logisticTemplates.length) {
+    CopyTabProps.tabInfos[0].tabContents[1].selectInfos = logisticTemplates;
+    CopyTabProps.tabInfos[0].tabContents[1].defaultValue = logisticTemplates[0].key;
+    initialValues.item_set.ship_id = logisticTemplates[0].key;
+  }
+
   const handlerCopySubmit = (data) => {
     data.copy_urls = data.copy_urls.split("\n");
     dispatch(createCopyTask(data));
   };
-  useEffect(() => {
-    dispatch(getShopInfo());
-    dispatch(getLogisticTemplates());
-  }, []);
-  const logisticTemplates = useSelector(selectlogisticTemplates);
-  console.log("x", logisticTemplates);
+  const onValuesChange = (x, y) => {
+    console.log("xxxxxx", x, y);
+  };
   return (
     <Fragment>
       <PageHeader {...headerProps} />
       <Content>
-        <Form initialValues={initialValues} onFinish={handlerCopySubmit}>
+        <Form initialValues={initialValues} form={form} onFinish={handlerCopySubmit} onValuesChange={onValuesChange}>
           <InputArea />
-          <PropTabs {...CopyTabProps} />
+          <PropTabs {...CopyTabProps} form={form} />
           <Form.Item>
             <Button type="primary" htmlType="submit" size="large">
               开始复制

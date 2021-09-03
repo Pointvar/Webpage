@@ -169,11 +169,12 @@ AUTHENTICATION_BACKENDS = ["auth.backends.OAuthBackend"]
 # }
 
 # OAUTH2配置文件
-SERVER_HOST = "dev.ituzan.com:8001"
+SERVER_HOST = "www.safaritechx.com"
 # 拼多多
 
-OAUTH_REDIRECT_PDD = "http://{0}/auth/pinduoduo".format(SERVER_HOST)
+OAUTH_REDIRECT_PDD = "https://{0}/auth/pinduoduo_login".format(SERVER_HOST)
 APP_CONF_PDD = {"APP_KEY": "cac0eeeba4c1458dae9faf9b197c00ee", "APP_SECRET": "69555508c35a0b241b6f35d658f86e1493d0f2af"}
 OAUTH_CONF_PDD = "https://fuwu.pinduoduo.com/service-market/auth?response_type=code&client_id={0}&redirect_uri={1}".format(
     APP_CONF_PDD["APP_KEY"], OAUTH_REDIRECT_PDD
 )
+print (OAUTH_CONF_PDD)

@@ -31,12 +31,7 @@ function InputArea() {
             },
           ]}
         >
-          <TextArea
-            rows={10}
-            allowClear
-            bordered
-            placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。"
-          />
+          <TextArea rows={10} allowClear bordered placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。" />
         </Form.Item>
       </div>
     </div>

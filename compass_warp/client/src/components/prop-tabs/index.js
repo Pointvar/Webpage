@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment } from "react";
 import { Tabs, Radio, Form, Cascader, Select, Input, InputNumber } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
 let { Option } = Select;
@@ -10,34 +10,45 @@ const { TabPane } = Tabs;
 
 function PropRadio(props) {
   // 简单的单项选择组件
-  const { label, name, defaultValue, selectInfos, tips, component = null } = props;
-  const [value, setValue] = useState(defaultValue);
-  const onChangeRadio = (e) => {
-    setValue(e.target.value);
-  };
+  const { label, name, selectInfos, tips, component = null } = props;
   return (
     <div className="prop-box">
       <Form.Item name={name} label={label} tooltip={{ title: tips, icon: <InfoCircleOutlined /> }}>
-        <div className="prop-element">
-          <Radio.Group onChange={onChangeRadio} value={value}>
-            {selectInfos.map((selectInfo) => {
-              const { key, value } = selectInfo;
-              return (
-                <Radio value={key} key={key}>
-                  {value}
-                </Radio>
-              );
-            })}
-          </Radio.Group>
-        </div>
+        <Radio.Group className="prop-element">
+          {selectInfos.map((selectInfo) => {
+            const { key, value } = selectInfo;
+            return (
+              <Radio value={key} key={key}>
+                {value}
+              </Radio>
+            );
+          })}
+        </Radio.Group>
       </Form.Item>
-      {component && component.showValue === value ? component.fragment : null}
+      {component && (
+        <Form.Item
+          shouldUpdate={(prev, current) => {
+            return (
+              prev.item_set.categray !== current.item_set.categray ||
+              prev.advanced_set.item_stock !== current.advanced_set.item_stock
+            );
+          }}
+          noStyle
+        >
+          {({ getFieldValue }) => {
+            const value = getFieldValue(name);
+            console.log(name, value, "444444444");
+            return component && component.showValue === value ? component.fragment : null;
+          }}
+        </Form.Item>
+      )}
     </div>
   );
 }
 
 function PropRadioSelect(props) {
   // 单选+多级选择组件
+
   const { name, placeholder, ruleMessage, optionInfos } = props.component;
   const fragment = (
     <Fragment>
@@ -82,22 +93,18 @@ function PropSelect(props) {
   //  简单的选择框
   const { label, name, defaultValue, selectInfos, tips } = props;
   return (
-    <div className="prop-box">
-      <Form.Item name={name} label={label} tooltip={{ title: tips, icon: <InfoCircleOutlined /> }}>
-        <div className="prop-element">
-          <Select defaultValue={defaultValue} style={{ width: 140 }}>
-            {selectInfos.map((selectInfo) => {
-              const { key, value } = selectInfo;
-              return (
-                <Option value={key} key={key}>
-                  {value}
-                </Option>
-              );
-            })}
-          </Select>
-        </div>
-      </Form.Item>
-    </div>
+    <Form.Item className="prop-box" name={name} label={label} tooltip={{ title: tips, icon: <InfoCircleOutlined /> }}>
+      <Select className="prop-element" value={defaultValue} style={{ width: 230 }}>
+        {selectInfos.map((selectInfo) => {
+          const { key, value } = selectInfo;
+          return (
+            <Option value={key} key={key}>
+              {value}
+            </Option>
+          );
+        })}
+      </Select>
+    </Form.Item>
   );
 }
 
@@ -112,7 +119,7 @@ function PropPriceSet(props) {
           <Input.Group compact>
             <span>{prefix}</span>
             <Form.Item name={priceNames.time}>
-              <InputNumber min={0} max={100} formatter={(value) => `${value}%`} parser={(value) => value.replace("%", "")} />
+              <InputNumber min={0} max={100} />
             </Form.Item>
             <Form.Item name={priceNames.operator}>
               <Select>
@@ -143,7 +150,7 @@ function PropTabs(props) {
               {tabContents.map((tabContent) => {
                 const key = tabContent.name.join("_");
                 if (tabContent.type === "radio") {
-                  return <PropRadio {...tabContent} key={key} />;
+                  return <PropRadio {...tabContent} form={props.form} key={key} />;
                 } else if (tabContent.type === "radio_select") {
                   return <PropRadioSelect {...tabContent} key={key} />;
                 } else if (tabContent.type === "select") {
@@ -152,13 +159,6 @@ function PropTabs(props) {
                   return <PropPriceSet {...tabContent} key={key} />;
                 } else if (tabContent.type === "radio_inputnum") {
                   return <PropRadioInputNum {...tabContent} key={key} />;
-                } else if (tabContent.type === "component") {
-                  console.log("CCCCCCC");
-                  return (
-                    <div className="prop-box" key={key}>
-                      {tabContent.component.fragment}
-                    </div>
-                  );
                 }
               })}
             </TabPane>

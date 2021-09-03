@@ -59,7 +59,10 @@ const copySlice = createSlice({
       state.selectedKeys = [];
     });
     builder.addCase(getLogisticTemplates.fulfilled, (state, action) => {
-      state.logisticTemplates = action.payload;
+      state.logisticTemplates = action.payload.map((logisticTemplate) => {
+        const { template_id, template_name } = logisticTemplate;
+        return { key: template_id, value: template_name };
+      });
     });
   },
 });
@@ -69,6 +72,6 @@ export const { setFilterTitle, setFilterId, setFilterPlatform, setfilterStatus, 
 export const selectComplexTasks = (state) => state.copy.complexTasks;
 export const selectSelectedKeys = (state) => state.copy.selectedKeys;
 export const selectFilterData = (state) => state.copy.filterData;
-export const selectlogisticTemplates = (state) => state.logisticTemplates;
+export const selectlogisticTemplates = (state) => state.copy.logisticTemplates;
 
 export default copySlice.reducer;
