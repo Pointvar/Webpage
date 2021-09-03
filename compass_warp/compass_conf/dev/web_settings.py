@@ -173,8 +173,7 @@ SERVER_HOST = "dev.ituzan.com:8001"
 # 拼多多
 
 OAUTH_REDIRECT_PDD = "http://{0}/auth/pinduoduo".format(SERVER_HOST)
-APP_CONF_PDD = {"APP_KEY": "5d68faf8618e423295eb6ed7ab83905f", "APP_SECRET": "8ebb8796b3975cc36d5a5521380140e1ee675a4a"}
+APP_CONF_PDD = {"APP_KEY": "cac0eeeba4c1458dae9faf9b197c00ee", "APP_SECRET": "69555508c35a0b241b6f35d658f86e1493d0f2af"}
 OAUTH_CONF_PDD = "https://fuwu.pinduoduo.com/service-market/auth?response_type=code&client_id={0}&redirect_uri={1}".format(
     APP_CONF_PDD["APP_KEY"], OAUTH_REDIRECT_PDD
 )
-print(OAUTH_CONF_PDD)
