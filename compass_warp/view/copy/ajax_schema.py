@@ -21,6 +21,11 @@ ajax_get_logistic_templates_schema = {
     "properties": {},
 }
 
+ajax_get_authorize_cats_schema = {
+    "type": "object",
+    "properties": {},
+}
+
 ajax_hide_copy_complex_tasks_schema = {
     "type": "object",
     "properties": {

@@ -25,7 +25,7 @@ from compass_warp.view.copy import ajax_view as copy_ajax_view
 handler404 = main_view.handler404
 urlpatterns = [
     path("auth/pinduoduo_login", auth_view.pinduoduo_login),
-    path("sxdz_auth_pdd", auth_view.pinduoduo_login),
+    path("auth/pinduoduo_logout", auth_view.pinduoduo_logout),
     path("auth/debug_login", auth_view.debug_login),
     path("link_copy", copy_view.link_copy, name="link_copy"),
 ]
@@ -39,6 +39,7 @@ ajax_copy_urlPatterns = [
     path("ajax_hide_copy_complex_tasks", copy_ajax_view.ajax_hide_copy_complex_tasks),
     path("ajax_get_copy_complex_tasks", copy_ajax_view.ajax_get_copy_complex_tasks),
     path("ajax_get_logistic_templates", copy_ajax_view.ajax_get_logistic_templates),
+    path("ajax_get_authorize_cats", copy_ajax_view.ajax_get_authorize_cats),
 ]
 
 urlpatterns += ajax_main_urlpatterns

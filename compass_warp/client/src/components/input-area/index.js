@@ -4,8 +4,8 @@ import { Input, Form } from "antd";
 import "antd/dist/antd.css";
 import "./index.scss";
 
-import taobaoLogo from "../../public/taobao_logo.png";
-import tmallLogo from "../../public/tmall_logo.png";
+import taobaoLogo from "@/public/taobao_logo.png";
+import tmallLogo from "@/public/tmall_logo.png";
 const { TextArea } = Input;
 
 function InputArea() {

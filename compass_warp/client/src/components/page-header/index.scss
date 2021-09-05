@@ -1,12 +1,26 @@
 .ant-layout-header {
   display: flex;
   justify-content: space-around;
-  background: #87ceeb;
+  background: rgba(20, 168, 224, 0.88);
   .menus {
     margin-left: 150px;
     flex-grow: 1;
     .ant-menu {
       background: transparent;
+    }
+    .ant-menu-item.ant-menu-item-selected {
+      .ant-menu-title-content {
+        a {
+          color: rgba(255, 255, 255, 0.8);
+        }
+      }
+    }
+    .ant-menu-item {
+      .ant-menu-title-content {
+        a {
+          color: rgb(255, 255, 255);
+        }
+      }
     }
   }
   .logo {
@@ -16,11 +30,23 @@
       margin-right: 32px;
     }
   }
-  .user,
+  .user {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    user_popover {
+      width: 400px;
+    }
+  }
   .operate {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    line-height: 32px;
   }
 }

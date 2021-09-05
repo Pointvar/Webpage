@@ -13,11 +13,12 @@ from db_models.shop_infos.shop_order_db import ShopOrderDB
 
 
 class VersionService:
-    def __init__(self, sid, nick, platform, soft_code):
+    def __init__(self, sid, nick, platform, soft_code, source):
         self.sid = sid
         self.nick = nick
         self.platform = platform
         self.soft_code = soft_code
+        self.source = source
         self.shop_order_db = ShopOrderDB(sid, nick, platform, soft_code)
 
     def get_shop_version_by_orders(self):

@@ -3,11 +3,9 @@ import ReactDOM from "react-dom";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store";
 
-import { Form, Input, InputNumber, Cascader, Button, Select, Tooltip } from "antd";
-import { InfoCircleOutlined } from "@ant-design/icons";
+import { Form, Button } from "antd";
 import { Layout } from "antd";
 const { Content } = Layout;
-const { Option } = Select;
 
 import PageHeader from "@/components/page-header";
 import InputArea from "@/components/input-area";
@@ -15,14 +13,20 @@ import PropTabs from "@/components/prop-tabs";
 import PageFooter from "@/components/page-footer";
 
 import { NAV_MENUS } from "@/constants/common";
-import { getShopInfo } from "@/features/common-slice";
-import { getLogisticTemplates, selectlogisticTemplates, createCopyTask } from "@/features/copy-slice";
+import { getShopInfo, selectShopInfo } from "@/features/common-slice";
+import {
+  getLogisticTemplates,
+  selectlogisticTemplates,
+  createCopyTask,
+  getAuthorizeCats,
+  selectAuthorizeCats,
+} from "@/features/copy-slice";
 
 import "antd/dist/antd.css";
 import "./index.scss";
 
 const headerProps = {
-  menus: NAV_MENUS,
+  NavMenus: NAV_MENUS,
   activeLink: "link-copy",
 };
 
@@ -49,46 +53,10 @@ const initialValues = {
     item_title: "FRONT",
     item_stock: "KEEP",
     custom_stock: null,
-    shipment_type: "HOUR12",
+    shipment_type: "HOUR24",
     item_track: "DEFAULT",
   },
 };
-
-const options = [
-  {
-    value: "zhejiang",
-    label: "Zhejiang",
-    children: [
-      {
-        value: "hangzhou",
-        label: "Hanzhou",
-        children: [
-          {
-            value: "xihu",
-            label: "West Lake",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    value: "jiangsu",
-    label: "Jiangsu",
-    children: [
-      {
-        value: "nanjing",
-        label: "Nanjing",
-        children: [
-          {
-            value: "zhonghuamen",
-            label: "Zhong Hua Men",
-          },
-        ],
-      },
-    ],
-  },
-];
-
 const CopyTabProps = {
   activeTab: "item_set",
   tabInfos: [
@@ -100,7 +68,6 @@ const CopyTabProps = {
           label: "商品类目",
           name: ["item_set", "categray"],
           type: "radio_select",
-          defaultValue: "AUTO",
           selectInfos: [
             { key: "AUTO", value: "智能匹配" },
             { key: "MANUAL", value: "手动选择" },
@@ -119,14 +86,14 @@ const CopyTabProps = {
             name: ["item_set", "custom_category"],
             placeholder: "提示: 请点击选择商品类目",
             ruleMessage: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目！",
-            optionInfos: options,
+            fieldNames: null,
+            optionInfos: [],
           },
         },
         {
           label: "运费模版",
           name: ["item_set", "ship_id"],
           type: "select",
-          defaultValue: null,
           selectInfos: [],
           tips: (
             <span>
@@ -142,7 +109,6 @@ const CopyTabProps = {
           label: "商品状态",
           name: ["item_set", "item_status"],
           type: "radio",
-          defaultValue: "ONSALE",
           selectInfos: [
             { key: "ONSALE", value: "出售中" },
             { key: "STOCK", value: "仓库中" },
@@ -164,7 +130,6 @@ const CopyTabProps = {
           label: "商品过滤",
           name: ["item_set", "filter"],
           type: "radio",
-          defaultValue: true,
           selectInfos: [
             { key: true, value: "过滤已复制商品" },
             { key: false, value: "不过滤已复制商品" },
@@ -230,7 +195,6 @@ const CopyTabProps = {
           label: "商品标题",
           name: ["advanced_set", "item_title"],
           type: "radio",
-          defaultValue: "FRONT",
           selectInfos: [
             { key: "FRONT", value: "截取前面30个字符" },
             { key: "END", value: "截取后面30个字符" },
@@ -241,7 +205,6 @@ const CopyTabProps = {
           label: "商品库存",
           name: ["advanced_set", "item_stock"],
           type: "radio_inputnum",
-          defaultValue: "KEEP",
           selectInfos: [
             { key: "KEEP", value: "保持原库存" },
             { key: "MANUAL", value: "自定义库存" },
@@ -257,7 +220,6 @@ const CopyTabProps = {
           label: "发货时效",
           name: ["advanced_set", "shipment_type"],
           type: "radio",
-          defaultValue: "HOUR24",
           selectInfos: [
             { key: "HOUR24", value: "24小时内" },
             { key: "HOUR48", value: "48小时内" },
@@ -280,11 +242,14 @@ const CopyTabProps = {
 function LinkCopy() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const shopInfo = useSelector(selectShopInfo);
   const logisticTemplates = useSelector(selectlogisticTemplates);
+  const authorizeCats = useSelector(selectAuthorizeCats);
 
   useEffect(() => {
     dispatch(getShopInfo());
     dispatch(getLogisticTemplates());
+    dispatch(getAuthorizeCats());
     // logisticTemplates.length && form.setFieldsValue({ item_set: { ship_id: logisticTemplates[0].key } });
   }, []);
   if (logisticTemplates.length) {
@@ -292,19 +257,18 @@ function LinkCopy() {
     CopyTabProps.tabInfos[0].tabContents[1].defaultValue = logisticTemplates[0].key;
     initialValues.item_set.ship_id = logisticTemplates[0].key;
   }
+  CopyTabProps.tabInfos[0].tabContents[0].component.optionInfos = authorizeCats;
+  CopyTabProps.tabInfos[0].tabContents[0].component.fieldNames = { label: "cat_name", value: "cat_id", children: "child_cats" };
 
   const handlerCopySubmit = (data) => {
     data.copy_urls = data.copy_urls.split("\n");
     dispatch(createCopyTask(data));
   };
-  const onValuesChange = (x, y) => {
-    console.log("xxxxxx", x, y);
-  };
   return (
     <Fragment>
-      <PageHeader {...headerProps} />
+      <PageHeader {...headerProps} shopInfo={shopInfo} />
       <Content>
-        <Form initialValues={initialValues} form={form} onFinish={handlerCopySubmit} onValuesChange={onValuesChange}>
+        <Form initialValues={initialValues} form={form} onFinish={handlerCopySubmit}>
           <InputArea />
           <PropTabs {...CopyTabProps} form={form} />
           <Form.Item>

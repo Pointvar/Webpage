@@ -6,22 +6,15 @@ import store from "@/store";
 import "antd/dist/antd.css";
 import "./index.scss";
 
-import { Form, Input, Select, Tooltip, Button, Space, Typography } from "antd";
-
-const { Option } = Select;
-const xxx = (
-  <Form>
-    <Form.Item label="Address" noStyle></Form.Item>
-  </Form>
-);
+import { Form, InputNumber, Select, Tooltip, Button, Space, Typography } from "antd";
 
 // 一键复制页面主体
 function Test() {
-  const onFinish = (values) => {
-    console.log("Received values of form: ", values);
-  };
-
-  return <div>{xxx}</div>;
+  return (
+    <Space direction="vertical">
+      <InputNumber addonBefore="+" addonAfter="$" defaultValue={100} />
+    </Space>
+  );
 }
 
 ReactDOM.render(

@@ -1,5 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { ajaxCreateCopyTask, ajaxGetCopyComplexTasks, ajaxHideCopyComplexTasks, ajaxGetLogisticTemplates } from "@/apis";
+import {
+  ajaxCreateCopyTask,
+  ajaxGetCopyComplexTasks,
+  ajaxHideCopyComplexTasks,
+  ajaxGetLogisticTemplates,
+  ajaxGetAuthorizeCats,
+} from "@/apis";
 
 // ActionCreators
 export const createCopyTask = createAsyncThunk("copy/createCopyTask", async (data = {}) => {
@@ -17,12 +23,18 @@ export const hideCopyComplexTasks = createAsyncThunk("copy/hideCopyComplexTasks"
 export const getLogisticTemplates = createAsyncThunk("copy/getLogisticTemplates", async (data = {}) => {
   return await ajaxGetLogisticTemplates(data);
 });
+
+export const getAuthorizeCats = createAsyncThunk("copy/getAuthorizeCats", async (data = {}) => {
+  return await ajaxGetAuthorizeCats(data);
+});
+
 // 初始化State数据
 const initialState = {
   complexTasks: [],
   selectedKeys: [],
   filterData: { filterTitle: null, filterId: null, filterPlatform: "#ALL#", filterStatus: "#ALL#" },
   logisticTemplates: [],
+  authorizeCats: [],
 };
 
 // 生成切片对象
@@ -64,6 +76,9 @@ const copySlice = createSlice({
         return { key: template_id, value: template_name };
       });
     });
+    builder.addCase(getAuthorizeCats.fulfilled, (state, action) => {
+      state.authorizeCats = action.payload;
+    });
   },
 });
 
@@ -73,5 +88,6 @@ export const selectComplexTasks = (state) => state.copy.complexTasks;
 export const selectSelectedKeys = (state) => state.copy.selectedKeys;
 export const selectFilterData = (state) => state.copy.filterData;
 export const selectlogisticTemplates = (state) => state.copy.logisticTemplates;
+export const selectAuthorizeCats = (state) => state.copy.authorizeCats;
 
 export default copySlice.reducer;

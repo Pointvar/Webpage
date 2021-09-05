@@ -14,3 +14,6 @@ export const ajaxHideCopyComplexTasks = (data) => axios.post("ajax_hide_copy_com
 
 // 获取商家的运费模版
 export const ajaxGetLogisticTemplates = (data) => axios.post("ajax_get_logistic_templates", data);
+
+// 获取商家授权类目
+export const ajaxGetAuthorizeCats = (data) => axios.post("ajax_get_authorize_cats", data);

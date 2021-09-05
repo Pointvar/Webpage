@@ -30,6 +30,18 @@ def ajax_get_logistic_templates(request):
     return JsonResponse(return_dict)
 
 
+@ajax_json_validate(ajax_get_authorize_cats_schema)
+def ajax_get_authorize_cats(request):
+    return_dict = {"success": True, "data": ""}
+    shop_info = request.shop_info
+    keys = ["sid", "nick", "platform", "soft_code", "source"]
+    sid, nick, platform, soft_code, source = [shop_info[key] for key in keys]
+    copy_service = CopyService(sid, nick, platform, soft_code, source)
+    authorize_cats = copy_service.get_authorize_cats()
+    return_dict["data"] = authorize_cats
+    return JsonResponse(return_dict)
+
+
 @ajax_json_validate(ajax_get_copy_complex_tasks_schema)
 def ajax_get_copy_complex_tasks(request):
     return_dict = {"success": True, "data": ""}

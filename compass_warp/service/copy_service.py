@@ -25,8 +25,9 @@ from pdd_models.upload_pdd_goods_image import UploadPddGoodsImage
 from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMapping
 from pdd_models.get_pdd_goods_cat_rule import GetPddGoodsCatRule
 from pdd_models.get_pdd_goods_logistics_template import GetPddGoodsLogisticsTemplate
+from pdd_models.cats_pdd_goods_authorization import CatsPddGoodsAuthorization
 
-
+from db_models.category_infos.pdd_category_db import PddCategoryDB
 from db_models.copy_infos.simple_task_db import CopySimpleTaskDB
 from db_models.copy_infos.complex_task_db import CopyComplexTaskDB
 
@@ -53,6 +54,8 @@ class CopyService:
         self.pdd_add_item_api = AddPddGoods(self.user_info, self.source)
         self.pdd_upload_image_api = UploadPddGoodsImage(self.user_info, self.source)
         self.pdd_get_logistic_api = GetPddGoodsLogisticsTemplate(self.user_info, self.source)
+        self.pdd_get_auth_cats_api = CatsPddGoodsAuthorization(self.user_info, self.source)
+        self.pdd_categroy_db = PddCategoryDB(sid, nick, platform, soft_code)
         self.copy_simple_task_db = CopySimpleTaskDB(sid, nick, platform, soft_code)
         self.copy_complex_task_db = CopyComplexTaskDB(sid, nick, platform, soft_code)
 
@@ -107,6 +110,26 @@ class CopyService:
         # 获取后台的运费模版信息
         logistic_templates = self.pdd_get_logistic_api.get_pdd_goods_logistics_template()
         return logistic_templates
+
+    def get_authorize_cats(self):
+        # 获取用户可发布的类目
+        authorize_cats = self.pdd_get_auth_cats_api.cats_pdd_goods_authorization(0)
+        pdd_categorys = self.pdd_categroy_db.get_pdd_categorys()
+        category_maps = {}
+        for pdd_category in pdd_categorys:
+            parent_cat_id = pdd_category["parent_cat_id"]
+            category_maps.setdefault(parent_cat_id, [])
+            category_maps[parent_cat_id].append(pdd_category)
+
+        combine_cats = []
+        while authorize_cats:
+            authorize_cat = authorize_cats.pop()
+            if "leaf" in authorize_cat:
+                combine_cats.append(authorize_cat)
+            cat_id = authorize_cat["cat_id"]
+            authorize_cat["child_cats"] = category_maps.get(cat_id, [])
+            authorize_cats.extend(authorize_cat["child_cats"])
+        return combine_cats
 
     def save_copy_task(self, copy_urls, item_set, price_set, advanced_set):
         # 保存复制任务
@@ -325,7 +348,7 @@ class CopyService:
 if __name__ == "__main__":
     sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
-    print(copy_service.get_logistic_templates())
+    print(copy_service.get_authorize_cats())
     # item_html = copy_service.get_taobao_item_api(625435033956)
     # print(copy_service.pdd_get_spec_api.get_pdd_goods_spec(8132))
     # item_dict = copy_service.parse_taobao_item_api(item_html)

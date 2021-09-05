@@ -1,32 +1,38 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import { Layout, Menu, Button } from "antd";
-import { selectShopInfo } from "@/features/common-slice";
+import { Layout, Menu, Button, Popover } from "antd";
+import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
+import kjshLogo from "@/public/kjsh_logo.png";
 import "antd/dist/antd.css";
 import "./index.scss";
 
 const { Header } = Layout;
 
-function PageHeader(props) {
-  const shopInfo = useSelector(selectShopInfo);
-  const { nick, deadline } = shopInfo;
+const content = (
+  <div className="user-popover" style={{ display: "flex", justifyContent: "space-between", width: 180 }}>
+    <a href="/auth/pinduoduo_logout">
+      <LoginOutlined />
+      切换账号
+    </a>
+
+    <a href="/auth/pinduoduo_logout" style={{ color: "red" }}>
+      <LogoutOutlined />
+      退出登陆
+    </a>
+  </div>
+);
+
+function PageHeader({ activeLink, NavMenus, shopInfo }) {
+  const { shop_name, shop_logo } = shopInfo;
   return (
     <Header>
       <div className="logo">
-        <h1>
-          <a href="/index">
-            <img src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" />
-            快捷搬家上货
-          </a>
-        </h1>
+        <a href="/index">
+          <img src={kjshLogo} />
+        </a>
       </div>
       <div className="menus">
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          defaultSelectedKeys={[props.activeLink]}
-        >
-          {props.menus.map((menu) => {
+        <Menu theme="dark" mode="horizontal" defaultSelectedKeys={[activeLink]} style={{ fontSize: 20 }}>
+          {NavMenus.map((menu) => {
             return (
               <Menu.Item key={menu.key}>
                 <a href={menu.link}>{menu.name}</a>
@@ -35,10 +41,12 @@ function PageHeader(props) {
           })}
         </Menu>
       </div>
-      <div className="user">
-        <span>店铺名称: {nick}</span>
-        <span>到期时间: {deadline}</span>
-      </div>
+      <Popover placement="bottom" content={content} trigger="hover">
+        <div className="user">
+          <img src={shop_logo} />
+          <span>{shop_name}</span>
+        </div>
+      </Popover>
       <div className="operate">
         <Button type="primary">联系我们</Button>
         <Button type="primary" danger>

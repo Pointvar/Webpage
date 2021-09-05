@@ -1,11 +1,10 @@
-from urllib.parse import unquote
-from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render
+from django.http import HttpResponseRedirect, Http404
 
+from compass.settings import OAUTH_CONF_PDD
 from compass_warp.service.shop_service import ShopService
 
 import logging
@@ -17,10 +16,11 @@ def save_oauth_user(user):
     """保存授权用户的店铺信息"""
     keys = ["sid", "nick", "platform", "soft_code"]
     sid, nick, platform, soft_code = [user.process_oauth[key] for key in keys]
-    shop_service = ShopService(sid, nick, platform, soft_code)
+    shop_service = ShopService(sid, nick, platform, soft_code, "web-auth")
     keys = ["access_token", "refresh_token", "access_expires", "refresh_expires"]
     access_token, refresh_token, access_expires, refresh_expires = [user.process_oauth[key] for key in keys]
     shop_service.save_shop_auth(access_token, refresh_token, access_expires, refresh_expires)
+    shop_service.save_shop_info()
 
 
 # 授权相关View
@@ -58,10 +58,10 @@ def pinduoduo_login(request):
 
 
 # 退出相关View
-def logout_page(request):
+def pinduoduo_logout(request):
     """退出登陆状态"""
     logout(request)
-    return HttpResponseRedirect(reverse("auth.views.login_page"))
+    return HttpResponseRedirect(OAUTH_CONF_PDD)
 
 
 # def login_page(request):

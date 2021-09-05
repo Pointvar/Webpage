@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { Tabs, Radio, Form, Cascader, Select, Input, InputNumber } from "antd";
+import { Tabs, Radio, Form, Cascader, Select, Input, InputNumber, Tooltip } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
 let { Option } = Select;
 
@@ -11,9 +11,15 @@ const { TabPane } = Tabs;
 function PropRadio(props) {
   // 简单的单项选择组件
   const { label, name, selectInfos, tips, component = null } = props;
+  const labelTips = (
+    <Tooltip title={tips}>
+      {label}
+      <InfoCircleOutlined />
+    </Tooltip>
+  );
   return (
     <div className="prop-box">
-      <Form.Item name={name} label={label} tooltip={{ title: tips, icon: <InfoCircleOutlined /> }}>
+      <Form.Item name={name} label={labelTips}>
         <Radio.Group className="prop-element">
           {selectInfos.map((selectInfo) => {
             const { key, value } = selectInfo;
@@ -49,7 +55,7 @@ function PropRadio(props) {
 function PropRadioSelect(props) {
   // 单选+多级选择组件
 
-  const { name, placeholder, ruleMessage, optionInfos } = props.component;
+  const { name, placeholder, ruleMessage, optionInfos, fieldNames } = props.component;
   const fragment = (
     <Fragment>
       <Form.Item
@@ -61,7 +67,13 @@ function PropRadioSelect(props) {
           },
         ]}
       >
-        <Cascader options={optionInfos} changeOnSelect placeholder={placeholder} style={{ width: "300px" }} />
+        <Cascader
+          options={optionInfos}
+          fieldNames={fieldNames}
+          changeOnSelect
+          placeholder={placeholder}
+          style={{ width: "300px" }}
+        />
       </Form.Item>
     </Fragment>
   );
@@ -92,8 +104,14 @@ function PropRadioInputNum(props) {
 function PropSelect(props) {
   //  简单的选择框
   const { label, name, defaultValue, selectInfos, tips } = props;
+  const labelTips = (
+    <Tooltip title={tips}>
+      {label}
+      <InfoCircleOutlined />
+    </Tooltip>
+  );
   return (
-    <Form.Item className="prop-box" name={name} label={label} tooltip={{ title: tips, icon: <InfoCircleOutlined /> }}>
+    <Form.Item className="prop-box" name={name} label={labelTips}>
       <Select className="prop-element" value={defaultValue} style={{ width: 230 }}>
         {selectInfos.map((selectInfo) => {
           const { key, value } = selectInfo;
@@ -119,7 +137,7 @@ function PropPriceSet(props) {
           <Input.Group compact>
             <span>{prefix}</span>
             <Form.Item name={priceNames.time}>
-              <InputNumber min={0} max={100} />
+              <InputNumber min={0} max={100} formatter={(value) => `${value}%`} parser={(value) => value.replace("%", "")} />
             </Form.Item>
             <Form.Item name={priceNames.operator}>
               <Select>
