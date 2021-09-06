@@ -25,4 +25,15 @@
       }
     }
   }
+  .ant-table-wrapper {
+    .ant-table-tbody .ant-table-cell {
+      padding: 6px;
+    }
+  }
+  // .ant-table-wrapper {
+  //   .ant-table-cell.src-item-info {
+  //     display: flex;
+  //     align-items: center;
+  //   }
+  // }
 }

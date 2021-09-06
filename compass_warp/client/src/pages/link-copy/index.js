@@ -3,7 +3,8 @@ import ReactDOM from "react-dom";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store";
 
-import { Form, Button } from "antd";
+import { InfoCircleTwoTone, InfoCircleOutlined, CheckCircleTwoTone } from "@ant-design/icons";
+import { Form, Button, Modal } from "antd";
 import { Layout } from "antd";
 const { Content } = Layout;
 
@@ -101,9 +102,10 @@ const CopyTabProps = {
               <hr />
               ①若有运费模版，默认选择第一个运费模版。
               <br />
-              ②若无运费模版，请点击右侧创建运费模版按钮。创建后刷新当前页面！
+              ②若无运费模版，请点击右侧运费模版管理按钮。创建模版后刷新当前页面！
             </span>
           ),
+          ruleMessage: "检测到未选择运费模版，请选择运费模版。",
         },
         {
           label: "商品状态",
@@ -143,6 +145,21 @@ const CopyTabProps = {
       tabTitle: "价格设置",
       tabContents: [
         {
+          name: ["price_set", "tips"],
+          type: "component",
+          component: (
+            <div className="prop-box">
+              <div style={{ fontSize: 16, margin: "2px 0px 6px 0px" }} className="prop-tips">
+                <InfoCircleTwoTone />
+                {
+                  "拼多多规定: ①市场价格>单买价格>团购价格。②商品加价幅度(团购价)不能超过源平台实际销售价格的8%，因此超价商品会自动修改为加价8%。"
+                }
+              </div>
+            </div>
+          ),
+        },
+
+        {
           label: "拼单价格",
           name: ["price_set", "group_price"],
           type: "price_set",
@@ -154,6 +171,12 @@ const CopyTabProps = {
               offset: ["price_set", "group_price", "offset"],
             },
             prefix: "拼单价格 = 原商品价格 x",
+            tips: (
+              <div className="prop-tips">
+                <InfoCircleOutlined />
+                <span>{"例: 源商品价格为1000元，则最终价格为: 1000 * 100% + 0 = 1000元"}</span>
+              </div>
+            ),
           },
         },
         {
@@ -168,6 +191,12 @@ const CopyTabProps = {
               offset: ["price_set", "singly_price", "offset"],
             },
             prefix: "单买价格 = 原商品价格 x",
+            tips: (
+              <div className="prop-tips">
+                <InfoCircleOutlined />
+                <span>{"例: 源商品价格为1000元，则最终价格为: 1000 * 100% + 1 = 1001元"}</span>
+              </div>
+            ),
           },
         },
         {
@@ -182,6 +211,12 @@ const CopyTabProps = {
               offset: ["price_set", "market_price", "offset"],
             },
             prefix: "市场价格 = 原市场价格 x",
+            tips: (
+              <div className="prop-tips">
+                <InfoCircleOutlined />
+                <span>{"例: 源商品价格为1000元，则最终价格为: 1000 * 100% + 2 = 1002元"}</span>
+              </div>
+            ),
           },
         },
       ],
@@ -250,7 +285,6 @@ function LinkCopy() {
     dispatch(getShopInfo());
     dispatch(getLogisticTemplates());
     dispatch(getAuthorizeCats());
-    // logisticTemplates.length && form.setFieldsValue({ item_set: { ship_id: logisticTemplates[0].key } });
   }, []);
   if (logisticTemplates.length) {
     CopyTabProps.tabInfos[0].tabContents[1].selectInfos = logisticTemplates;
@@ -263,12 +297,21 @@ function LinkCopy() {
   const handlerCopySubmit = (data) => {
     data.copy_urls = data.copy_urls.split("\n");
     dispatch(createCopyTask(data));
+    Modal.confirm({
+      content: `成功创建${data.copy_urls.length}条上货任务！`,
+      icon: <CheckCircleTwoTone />,
+      okText: <a href="/copy_record">查看记录</a>,
+      cancelText: "继续复制",
+      onCancel: () => {
+        form.setFieldsValue({ copy_urls: [] });
+      },
+    });
   };
   return (
     <Fragment>
       <PageHeader {...headerProps} shopInfo={shopInfo} />
       <Content>
-        <Form initialValues={initialValues} form={form} onFinish={handlerCopySubmit}>
+        <Form initialValues={initialValues} form={form} requiredMark={false} onFinish={handlerCopySubmit}>
           <InputArea />
           <PropTabs {...CopyTabProps} form={form} />
           <Form.Item>

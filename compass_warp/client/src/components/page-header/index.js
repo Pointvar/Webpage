@@ -1,5 +1,5 @@
 import React from "react";
-import { Layout, Menu, Button, Popover } from "antd";
+import { Layout, Menu, Button, Popover, Tooltip } from "antd";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import kjshLogo from "@/public/kjsh_logo.png";
 import "antd/dist/antd.css";
@@ -48,10 +48,16 @@ function PageHeader({ activeLink, NavMenus, shopInfo }) {
         </div>
       </Popover>
       <div className="operate">
-        <Button type="primary">联系我们</Button>
-        <Button type="primary" danger>
-          续费
+        <Button type="primary">
+          <a href="tencent://message/?uin=1655605815">联系我们(Windows)</a>
         </Button>
+
+        <Tooltip title="加入QQ群后联系管理员:958237009">
+          <Button type="primary">联系我们(MAC)</Button>
+        </Tooltip>
+        {/* <Button type="primary" danger>
+          续费
+        </Button> */}
       </div>
     </Header>
   );

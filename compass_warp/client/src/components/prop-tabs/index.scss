@@ -16,9 +16,16 @@
 .prop-box {
   display: flex;
   margin-bottom: 2px;
+  align-items: center;
   .ant-form-item-label label {
     font-weight: 500;
     margin-right: 8px;
+  }
+  .ant-btn {
+    margin: 0px 0px 0px 8px;
+  }
+  .prop-tips {
+    color: rgba(0, 0, 0, 0.5);
   }
 }
 .ant-input-group.ant-input-group-compact > * {

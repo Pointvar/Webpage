@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Button, Table, Select } from "antd";
+import { Input, Button, Table, Select, Popconfirm } from "antd";
 const { Option } = Select;
 const { Search } = Input;
 
@@ -30,7 +30,7 @@ function TableArea({
           </div>
           <div className="filter_element">
             <span className="label">商品ID搜索:</span>
-            <Search placeholder="支持源ID和复制后ID搜索" allowClear style={{ width: 230 }} onSearch={onSearchId} />
+            <Search placeholder="支持源ID和上货后ID搜索" allowClear style={{ width: 230 }} onSearch={onSearchId} />
           </div>
           <div className="filter_element">
             <span className="label">商品来源:</span>
@@ -56,7 +56,7 @@ function TableArea({
               })}
             </Select>
           </div>
-          <Button type="primary" onClick={onClickRestSearch}>
+          <Button className="filter_element" type="primary" onClick={onClickRestSearch}>
             搜索重置
           </Button>
         </div>
@@ -64,17 +64,39 @@ function TableArea({
         <div className="operator">
           <div className="operator_info">
             <div>
-              已选择:<span className="selectMessage">{selectedKeys.length}</span>
+              已选择:<span className="selectMessage">{selectedKeys.length}</span>条
             </div>
-            <div>记录数:{dataSource.length}</div>
+            <div>总记录:{dataSource.length}条</div>
           </div>
-          <Button type="primary" danger onClick={onClickHideTasks}>
-            删除已选
-          </Button>
+          <Popconfirm
+            title={
+              <span>
+                亲，确定删除已选择的上货记录吗?
+                <br />
+                该操作仅会删除软件内记录，不删除店铺内商品。
+              </span>
+            }
+            okText="确定"
+            cancelText="取消"
+            onConfirm={onClickHideTasks}
+          >
+            <Button type="primary" danger>
+              删除已选
+            </Button>
+          </Popconfirm>
         </div>
       </div>
 
-      {<Table rowSelection={rowSelection} dataSource={dataSource} columns={columns} rowKey="_id" />}
+      {
+        <Table
+          tableLayout="fixed"
+          rowSelection={rowSelection}
+          dataSource={dataSource}
+          columns={columns}
+          bordered
+          rowKey="_id"
+        />
+      }
     </div>
   );
 }

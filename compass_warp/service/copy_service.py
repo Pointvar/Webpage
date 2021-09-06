@@ -26,6 +26,7 @@ from pdd_models.get_pdd_goods_outer_cat_mapping import GetPddGoodsOuterCatMappin
 from pdd_models.get_pdd_goods_cat_rule import GetPddGoodsCatRule
 from pdd_models.get_pdd_goods_logistics_template import GetPddGoodsLogisticsTemplate
 from pdd_models.cats_pdd_goods_authorization import CatsPddGoodsAuthorization
+from pdd_models.get_pdd_goods_commit_status import GetPddGoodsCommitStatus
 
 from db_models.category_infos.pdd_category_db import PddCategoryDB
 from db_models.copy_infos.simple_task_db import CopySimpleTaskDB
@@ -55,6 +56,7 @@ class CopyService:
         self.pdd_upload_image_api = UploadPddGoodsImage(self.user_info, self.source)
         self.pdd_get_logistic_api = GetPddGoodsLogisticsTemplate(self.user_info, self.source)
         self.pdd_get_auth_cats_api = CatsPddGoodsAuthorization(self.user_info, self.source)
+        self.pdd_get_commit_status_api = GetPddGoodsCommitStatus(self.user_info, self.source)
         self.pdd_categroy_db = PddCategoryDB(sid, nick, platform, soft_code)
         self.copy_simple_task_db = CopySimpleTaskDB(sid, nick, platform, soft_code)
         self.copy_complex_task_db = CopyComplexTaskDB(sid, nick, platform, soft_code)
@@ -65,10 +67,13 @@ class CopyService:
         if "taobao" in host:
             source = "taobao"
             num_iid = parser_dict.args["id"]
+            parser_dict.args = dict(id=num_iid)
         elif "tmall" in host:
             source = "tianmao"
             num_iid = parser_dict.args["id"]
-        return source, num_iid
+            parser_dict.args = dict(id=num_iid)
+        parsed_url = parser_dict.url
+        return source, num_iid, parsed_url
 
     def _get_process_price(self, price_dict, price):
         times, operator, offset = [price_dict[key] for key in ["times", "operator", "offset"]]
@@ -136,8 +141,11 @@ class CopyService:
         amount = len(copy_urls)
         task_id = self.copy_simple_task_db.save_simple_task(item_set, price_set, advanced_set, amount)
         for index, copy_url in enumerate(copy_urls):
-            source, num_iid = self._get_copy_url_info(copy_url)
-            self.copy_complex_task_db.save_complex_task(task_id, copy_url, source, num_iid, index, amount)
+            source, num_iid, parsed_url = self._get_copy_url_info(copy_url)
+            self.copy_complex_task_db.save_complex_task(task_id, copy_url, source, num_iid, parsed_url, index, amount)
+
+    def get_pdd_goods_commit_status(self, num_iids):
+        return self.pdd_get_commit_status_api.get_pdd_goods_commit_status(num_iids)
 
     def get_copy_simple_task(self, task_id):
         return self.copy_simple_task_db.get_simple_task_by_id(task_id)
@@ -150,7 +158,13 @@ class CopyService:
         copy_task = self.copy_complex_task_db.get_wait_complex_task()
         return copy_task
 
+    def get_check_copy_complex_task(self):
+        copy_task = self.copy_complex_task_db.get_check_complex_task()
+        return copy_task
+
     def update_complex_task_by_params(self, in_ids, update_dict):
+        if not isinstance(in_ids, list):
+            in_ids = [in_ids]
         self.copy_complex_task_db.update_complex_task_by_params(in_ids, update_dict)
 
     def get_taobao_item_api(self, num_iid):
@@ -348,7 +362,8 @@ class CopyService:
 if __name__ == "__main__":
     sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
-    print(copy_service.get_authorize_cats())
+    # print(copy_service.get_authorize_cats())
+    print(copy_service.pdd_get_commit_status_api.get_pdd_goods_commit_status([70607709402]))
     # item_html = copy_service.get_taobao_item_api(625435033956)
     # print(copy_service.pdd_get_spec_api.get_pdd_goods_spec(8132))
     # item_dict = copy_service.parse_taobao_item_api(item_html)

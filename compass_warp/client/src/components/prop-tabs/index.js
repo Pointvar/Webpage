@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { Tabs, Radio, Form, Cascader, Select, Input, InputNumber, Tooltip } from "antd";
+import { Tabs, Radio, Form, Cascader, Select, Input, InputNumber, Tooltip, Button } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
 let { Option } = Select;
 
@@ -43,7 +43,6 @@ function PropRadio(props) {
         >
           {({ getFieldValue }) => {
             const value = getFieldValue(name);
-            console.log(name, value, "444444444");
             return component && component.showValue === value ? component.fragment : null;
           }}
         </Form.Item>
@@ -103,33 +102,50 @@ function PropRadioInputNum(props) {
 
 function PropSelect(props) {
   //  简单的选择框
-  const { label, name, defaultValue, selectInfos, tips } = props;
+  const { label, name, defaultValue, selectInfos, tips, ruleMessage } = props;
   const labelTips = (
     <Tooltip title={tips}>
       {label}
       <InfoCircleOutlined />
     </Tooltip>
   );
+
   return (
-    <Form.Item className="prop-box" name={name} label={labelTips}>
-      <Select className="prop-element" value={defaultValue} style={{ width: 230 }}>
-        {selectInfos.map((selectInfo) => {
-          const { key, value } = selectInfo;
-          return (
-            <Option value={key} key={key}>
-              {value}
-            </Option>
-          );
-        })}
-      </Select>
-    </Form.Item>
+    <div className="prop-box">
+      <Form.Item
+        name={name}
+        label={labelTips}
+        rules={[
+          {
+            required: true,
+            message: ruleMessage,
+          },
+        ]}
+      >
+        <Select className="prop-element" value={defaultValue} style={{ width: 230 }}>
+          {selectInfos.map((selectInfo) => {
+            const { key, value } = selectInfo;
+            return (
+              <Option value={key} key={key}>
+                {value}
+              </Option>
+            );
+          })}
+        </Select>
+      </Form.Item>
+      <Button type="primary" ghost>
+        <a href="https://mms.pinduoduo.com/orders/order/carriage/list" target="_blank" rel="noreferrer">
+          运费模板管理
+        </a>
+      </Button>
+    </div>
   );
 }
 
 function PropPriceSet(props) {
   // 价格设置组件
   const { label, name, component } = props;
-  const { priceNames, prefix } = component;
+  const { priceNames, prefix, tips } = component;
   return (
     <div className="prop-box">
       <Form.Item name={name} label={label}>
@@ -151,6 +167,7 @@ function PropPriceSet(props) {
           </Input.Group>
         </div>
       </Form.Item>
+      {tips}
     </div>
   );
 }
@@ -177,6 +194,8 @@ function PropTabs(props) {
                   return <PropPriceSet {...tabContent} key={key} />;
                 } else if (tabContent.type === "radio_inputnum") {
                   return <PropRadioInputNum {...tabContent} key={key} />;
+                } else {
+                  return <Fragment key={key}>{tabContent.component}</Fragment>;
                 }
               })}
             </TabPane>
