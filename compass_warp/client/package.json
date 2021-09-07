@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "webpack serve --progress --compress --color --config config/webpack.dev.js",
-    "prd": "webpack --progress --config config/webpack.prd.js"
+    "prd": "webpack --progress --config config/webpack.prd.js",
+    "report": "webpack-bundle-analyzer -p 8803 -h 0.0.0.0 ./dist/js/stats.json"
   },
   "author": "",
   "repository": "",
@@ -18,11 +19,15 @@
     "babel-loader": "^8.2.2",
     "css-loader": "^6.2.0",
     "eslint": "^7.32.0",
+    "eslint-plugin-html": "^6.1.2",
     "eslint-plugin-react": "^7.24.0",
+    "html-webpack-plugin": "^5.3.2",
+    "mini-css-extract-plugin": "^2.2.2",
     "sass": "^1.38.0",
     "sass-loader": "^12.1.0",
     "style-loader": "^3.2.1",
     "webpack": "^5.49.0",
+    "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.7.2",
     "webpack-dev-server": "^3.11.2",
     "webpack-merge": "^5.8.0"

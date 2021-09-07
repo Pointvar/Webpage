@@ -177,4 +177,4 @@ APP_CONF_PDD = {"APP_KEY": "cac0eeeba4c1458dae9faf9b197c00ee", "APP_SECRET": "69
 OAUTH_CONF_PDD = "https://fuwu.pinduoduo.com/service-market/auth?response_type=code&client_id={0}&redirect_uri={1}".format(
     APP_CONF_PDD["APP_KEY"], OAUTH_REDIRECT_PDD
 )
-print (OAUTH_CONF_PDD)
+print(OAUTH_CONF_PDD)

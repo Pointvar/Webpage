@@ -1,13 +1,21 @@
 const path = require("path");
 const webpackBase = require("./webpack.base");
 const { merge } = require("webpack-merge");
+const pages = require("./webpack.entry");
 
-let webpackDev = merge(webpackBase, {
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+var HtmlWebpackPlugin = require("html-webpack-plugin");
+
+let webpackPrd = merge(webpackBase, {
   mode: "production",
   output: {
-    filename: "[name][chunkhash:5].js",
-    path: path.resolve(__dirname, "../dist/js"),
-    chunkFilename: "[name][chunkhash:5].js",
+    filename: "js/[name]_[contenthash:6].js",
+    path: path.resolve(__dirname, "../dist"),
+    chunkFilename: "js/[name]_[contenthash:6].js",
+    assetModuleFilename: "asset/[name]_[contenthash:6][ext][query]",
+    clean: true,
+    publicPath: "/static/",
   },
 
   optimization: {
@@ -30,7 +38,15 @@ let webpackDev = merge(webpackBase, {
       },
     },
   },
-
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "css/[name]_[contenthash:6].css",
+    }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: "disabled",
+      generateStatsFile: true,
+    }),
+  ],
   module: {
     rules: [
       {
@@ -46,7 +62,7 @@ let webpackDev = merge(webpackBase, {
       },
       {
         test: /\.(css|scss)$/,
-        use: ["style-loader", "css-loader", "sass-loader"],
+        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
       },
       {
         test: /\.(png|jpg|gif)$/,
@@ -60,4 +76,17 @@ let webpackDev = merge(webpackBase, {
     ],
   },
 });
-module.exports = webpackDev;
+
+// 自动生成Html文件
+for (let page of pages) {
+  const htmlConf = {
+    title: page.title,
+    filename: "views/" + page.entry + ".html",
+    favicon: "./src/public/kjsh_logo.png",
+    template: "./src/pages/index.html",
+    chunks: ["vendor", "common", page.entry],
+  };
+  webpackPrd.plugins.push(new HtmlWebpackPlugin(htmlConf));
+}
+
+module.exports = webpackPrd;
