@@ -65,7 +65,7 @@ let webpackPrd = merge(webpackBase, {
         use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
       },
       {
-        test: /\.(png|jpg|gif)$/,
+        test: /\.(png|jpg|gif|ico)$/,
         type: "asset",
         parser: {
           dataUrlCondition: {
@@ -81,8 +81,7 @@ let webpackPrd = merge(webpackBase, {
 for (let page of pages) {
   const htmlConf = {
     title: page.title,
-    filename: "views/" + page.entry + ".html",
-    favicon: "./src/public/kjsh_logo.png",
+    filename: "templates/" + page.entry + ".html",
     template: "./src/pages/index.html",
     chunks: ["vendor", "common", page.entry],
   };

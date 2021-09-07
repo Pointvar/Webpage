@@ -28,6 +28,7 @@ urlpatterns = [
     path("auth/pinduoduo_logout", auth_view.pinduoduo_logout),
     path("auth/debug_login", auth_view.debug_login),
     path("link_copy", copy_view.link_copy, name="link_copy"),
+    path("copy_record", copy_view.copy_record),
 ]
 
 ajax_main_urlpatterns = [
