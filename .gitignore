@@ -3,6 +3,7 @@ compass_warp/compass/settings.py
 compass_warp/db_models/settings.py
 compass_warp/client/node_modules/
 compass_warp/static/dist_dev/
+compass_warp/client/dist/stats.json
 compass_warp/compass_conf/dev/web_settings.py
 script/node_modules/
 compass_warp/client/build/

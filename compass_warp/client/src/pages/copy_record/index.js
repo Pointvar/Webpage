@@ -138,13 +138,12 @@ const checkStatusProgress = (text, row) => {
   }
   const fragment = content ? (
     <Popover placement="top" content={content} trigger="hover">
-      <Progress type="circle" percent={percent} status={status} width={30} />
+      <Progress type="circle" percent={percent} status={status} width={40} />
       <div style={{ color }}>{formatStatus}</div>
     </Popover>
   ) : (
     <Fragment>
-      {" "}
-      <Progress type="circle" percent={percent} status={status} width={30} />
+      <Progress type="circle" percent={percent} status={status} width={40} />
       <div style={{ color }}>{formatStatus}</div>
     </Fragment>
   );

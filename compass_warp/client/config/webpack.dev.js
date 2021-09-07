@@ -4,7 +4,7 @@ const webpackBase = require("./webpack.base");
 
 let webpackDev = merge(webpackBase, {
   mode: "development",
-  devtool: "inline-source-map",
+  devtool: "eval-cheap-module-source-map",
   output: {
     filename: "[name].js",
     path: path.resolve(__dirname, "../build/js"),

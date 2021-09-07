@@ -4,8 +4,7 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store";
 
 import { InfoCircleTwoTone, InfoCircleOutlined, CheckCircleTwoTone } from "@ant-design/icons";
-import { Form, Button, Modal } from "antd";
-import { Layout } from "antd";
+import { Form, Button, Modal, Layout } from "antd";
 const { Content } = Layout;
 
 import PageHeader from "@/components/page-header";

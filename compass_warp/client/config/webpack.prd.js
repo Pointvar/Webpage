@@ -1,13 +1,36 @@
-const { merge } = require("webpack-merge");
 const path = require("path");
 const webpackBase = require("./webpack.base");
+const { merge } = require("webpack-merge");
 
 let webpackDev = merge(webpackBase, {
   mode: "production",
   output: {
-    filename: "[name].js",
+    filename: "[name][chunkhash:5].js",
     path: path.resolve(__dirname, "../dist/js"),
+    chunkFilename: "[name][chunkhash:5].js",
   },
+
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendor: {
+          name: "vendor",
+          test: /node_modules/,
+          priority: 100,
+          chunks: "all",
+        },
+        common: {
+          name: "common",
+          minChunks: 2,
+          priority: 90,
+          chunks: "all",
+          reuseExistingChunk: true,
+        },
+      },
+    },
+  },
+
   module: {
     rules: [
       {
@@ -30,7 +53,7 @@ let webpackDev = merge(webpackBase, {
         type: "asset",
         parser: {
           dataUrlCondition: {
-            maxSize: 10 * 1024,
+            maxSize: 4 * 1024,
           },
         },
       },

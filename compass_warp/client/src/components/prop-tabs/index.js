@@ -153,7 +153,7 @@ function PropPriceSet(props) {
           <Input.Group compact>
             <span>{prefix}</span>
             <Form.Item name={priceNames.time}>
-              <InputNumber min={0} max={100} formatter={(value) => `${value}%`} parser={(value) => value.replace("%", "")} />
+              <InputNumber min={80} max={120} formatter={(value) => `${value}%`} parser={(value) => value.replace("%", "")} />
             </Form.Item>
             <Form.Item name={priceNames.operator}>
               <Select>
