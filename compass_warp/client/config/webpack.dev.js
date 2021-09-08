@@ -10,6 +10,7 @@ let webpackDev = merge(webpackBase, {
   output: {
     filename: "js/[name].js",
     path: path.resolve(__dirname, "../build/"),
+    clean: true,
   },
   plugins: [],
   module: {
@@ -60,7 +61,7 @@ let webpackDev = merge(webpackBase, {
 for (let page of pages) {
   const htmlConf = {
     title: page.title,
-    filename: page.entry + ".html",
+    filename: page.entry,
     template: "./src/pages/index.html",
     chunks: [page.entry],
   };

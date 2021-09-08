@@ -7,7 +7,6 @@ axios.interceptors.response.use(
   function (response) {
     const responseData = response.data;
     if (!responseData.success) {
-      console.log(responseData.data.code, responseData.data.process);
       if (responseData.data.code === 3000) {
         Modal.error({
           content: responseData.data.msg,

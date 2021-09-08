@@ -13,6 +13,7 @@ import PageHeader from "@/components/page-header";
 import InputArea from "@/components/input-area";
 import PropTabs from "@/components/prop-tabs";
 import PageFooter from "@/components/page-footer";
+import _ from "lodash";
 
 import { NAV_MENUS } from "@/constants/common";
 import { getShopInfo, selectShopInfo } from "@/features/common-slice";
@@ -297,15 +298,18 @@ function LinkCopy() {
 
   const handlerCopySubmit = (data) => {
     data.copy_urls = data.copy_urls.split("\n");
-    dispatch(createCopyTask(data));
-    Modal.confirm({
-      content: `成功创建${data.copy_urls.length}条上货任务！`,
-      icon: <CheckCircleTwoTone />,
-      okText: <a href="/copy_record">查看记录</a>,
-      cancelText: "继续复制",
-      onCancel: () => {
-        form.setFieldsValue({ copy_urls: [] });
-      },
+    dispatch(createCopyTask(data)).then((data) => {
+      if (_.includes(data.type, "fulfilled")) {
+        Modal.confirm({
+          content: `成功创建${data.meta.arg.copy_urls.length}条上货任务！`,
+          icon: <CheckCircleTwoTone />,
+          okText: <a href="/copy_record">查看记录</a>,
+          cancelText: "继续复制",
+          onCancel: () => {
+            form.setFieldsValue({ copy_urls: [] });
+          },
+        });
+      }
     });
   };
   return (

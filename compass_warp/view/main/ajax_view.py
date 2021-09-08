@@ -13,10 +13,10 @@ def ajax_get_shop_info(request):
     shop_info = request.shop_info
     keys = ["sid", "nick", "platform", "soft_code", "source"]
     sid, nick, platform, soft_code, source = [shop_info[key] for key in keys]
-    version_service = VersionService(sid, nick, platform, soft_code, source)
+    # version_service = VersionService(sid, nick, platform, soft_code, source)
     shop_service = ShopService(sid, nick, platform, soft_code, source)
-    version, deadline = version_service.get_shop_version_by_orders()
-    shop_info.update(version=version, deadline=deadline)
+    # version, deadline = version_service.get_shop_version_by_orders()
+    # shop_info.update(version=version, deadline=deadline)
     shop_info_db = shop_service.get_shop_info()
     shop_info.update(shop_info_db)
     return_dict["data"] = shop_info
