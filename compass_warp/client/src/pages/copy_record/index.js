@@ -72,8 +72,8 @@ const checkStatusMaps = reduce(
 
 const platformMaps = [
   { key: "#ALL#", value: "全部" },
-  { key: "taobao", value: "淘宝" },
-  { key: "tianmao", value: "天猫" },
+  { key: "#TAOBAO#", value: "淘宝" },
+  { key: "#TIANMAO#", value: "天猫" },
 ];
 
 const platformStatusMaps = reduce(
@@ -165,7 +165,7 @@ const columns = [
         fragment = (
           <Fragment>
             <img src={`${row.main_pic}_60x60q90.jpg`} />
-            <a href={row.copy_url}>
+            <a href={row.copy_url} target="_blank" rel="noreferrer">
               <span>{row.itme_title}</span>
             </a>
           </Fragment>

@@ -1,8 +1,8 @@
 export const NAV_MENUS = [
   {
     name: "一键复制",
-    link: "/link-copy",
-    key: "link-copy",
+    link: "/link_copy",
+    key: "link_copy",
   },
   {
     name: "我的记录",

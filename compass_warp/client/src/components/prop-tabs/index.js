@@ -157,8 +157,8 @@ function PropPriceSet(props) {
             </Form.Item>
             <Form.Item name={priceNames.operator}>
               <Select>
-                <Option value="ADD">加</Option>
-                <Option value="SUB">减</Option>
+                <Option value="#ADD#">加</Option>
+                <Option value="#SUB#">减</Option>
               </Select>
             </Form.Item>
             <Form.Item name={priceNames.offset}>

@@ -30,34 +30,31 @@ import "./index.scss";
 
 const headerProps = {
   NavMenus: NAV_MENUS,
-  activeLink: "link-copy",
+  activeLink: "link_copy",
 };
 
 // 表单默认参数
 const initialValues = {
   copy_urls: [],
   item_set: {
-    categray: "AUTO",
-    filter: true,
-    item_status: "ONSALE",
-    item_detail: "AUTO",
-    item_title: "FRONT",
+    categray_type: "#AUTO#",
+    filter_same: true,
+    item_status: "#ONSALE#",
+    item_cut: "#FRONT#",
     ship_id: null,
     custom_category: null,
   },
   price_set: {
-    group_price: { times: 100, operator: "ADD", offset: 0 },
-    singly_price: { times: 100, operator: "ADD", offset: 1 },
-    market_price: { times: 100, operator: "ADD", offset: 2 },
-    decimal_type: "CUT",
+    group_price: { times: 100, operator: "#ADD#", offset: 0 },
+    singly_price: { times: 100, operator: "#ADD#", offset: 1 },
+    market_price: { times: 100, operator: "#ADD#", offset: 2 },
   },
 
   advanced_set: {
-    item_title: "FRONT",
-    item_stock: "KEEP",
+    item_cut: "#FRONT#",
+    item_stock: "#KEEP#",
     custom_stock: null,
-    shipment_type: "HOUR24",
-    item_track: "DEFAULT",
+    shipment_type: "#HOUR24#",
   },
 };
 const CopyTabProps = {
@@ -69,11 +66,11 @@ const CopyTabProps = {
       tabContents: [
         {
           label: "商品类目",
-          name: ["item_set", "categray"],
+          name: ["item_set", "categray_type"],
           type: "radio_select",
           selectInfos: [
-            { key: "AUTO", value: "智能匹配" },
-            { key: "MANUAL", value: "手动选择" },
+            { key: "#AUTO#", value: "智能匹配" },
+            { key: "#MANUAL#", value: "手动选择" },
           ],
           tips: (
             <span>
@@ -85,7 +82,7 @@ const CopyTabProps = {
             </span>
           ),
           component: {
-            showValue: "MANUAL",
+            showValue: "#MANUAL#",
             name: ["item_set", "custom_category"],
             placeholder: "提示: 请点击选择商品类目",
             ruleMessage: "检测到自定义商品类目为空，请选择智能匹配或输入商品类目！",
@@ -114,9 +111,8 @@ const CopyTabProps = {
           name: ["item_set", "item_status"],
           type: "radio",
           selectInfos: [
-            { key: "ONSALE", value: "出售中" },
-            { key: "STOCK", value: "仓库中" },
-            { key: "DRAFT", value: "草稿箱" },
+            { key: "#ONSALE#", value: "出售中" },
+            { key: "#STOCK#", value: "仓库中" },
           ],
           tips: (
             <span>
@@ -132,7 +128,7 @@ const CopyTabProps = {
         },
         {
           label: "商品过滤",
-          name: ["item_set", "filter"],
+          name: ["item_set", "filter_same"],
           type: "radio",
           selectInfos: [
             { key: true, value: "过滤已复制商品" },
@@ -230,11 +226,11 @@ const CopyTabProps = {
       tabContents: [
         {
           label: "商品标题",
-          name: ["advanced_set", "item_title"],
+          name: ["advanced_set", "item_cut"],
           type: "radio",
           selectInfos: [
-            { key: "FRONT", value: "截取前面30个字符" },
-            { key: "END", value: "截取后面30个字符" },
+            { key: "#FRONT#", value: "截取前面30个字符" },
+            { key: "#END#", value: "截取后面30个字符" },
           ],
           tips: <span>设置搬家后商品的标题</span>,
         },
@@ -243,12 +239,12 @@ const CopyTabProps = {
           name: ["advanced_set", "item_stock"],
           type: "radio_inputnum",
           selectInfos: [
-            { key: "KEEP", value: "保持原库存" },
-            { key: "MANUAL", value: "自定义库存" },
+            { key: "#KEEP#", value: "保持原库存" },
+            { key: "#MANUAL#", value: "自定义库存" },
           ],
           tips: <span>设置搬家后商品的库存</span>,
           component: {
-            showValue: "MANUAL",
+            showValue: "#MANUAL#",
             name: ["advanced_set", "custom_stock"],
             ruleMessage: "检测到自定义库存为空，请输入库存。",
           },
@@ -258,9 +254,9 @@ const CopyTabProps = {
           name: ["advanced_set", "shipment_type"],
           type: "radio",
           selectInfos: [
-            { key: "HOUR24", value: "24小时内" },
-            { key: "HOUR48", value: "48小时内" },
-            { key: "HOUR12", value: "当天发货" },
+            { key: "#HOUR24#", value: "24小时内" },
+            { key: "#HOUR48#", value: "48小时内" },
+            { key: "#HOUR12#", value: "当天发货" },
           ],
           tips: (
             <span>
@@ -301,7 +297,14 @@ function LinkCopy() {
     dispatch(createCopyTask(data)).then((data) => {
       if (_.includes(data.type, "fulfilled")) {
         Modal.confirm({
-          content: `成功创建${data.meta.arg.copy_urls.length}条上货任务！`,
+          content: (
+            <div>
+              <p>共提交:{data.payload.copy_urls.length}条上货任务</p>
+              <p>成功了:{data.payload.valid_urls.length}条上货任务</p>
+              <p>相同过滤:{data.payload.filter_urls.length}条上货任务</p>
+              <p>无效链接:{data.payload.invalid_urls.length}条上货任务</p>
+            </div>
+          ),
           icon: <CheckCircleTwoTone />,
           okText: <a href="/copy_record">查看记录</a>,
           cancelText: "继续复制",

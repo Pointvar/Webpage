@@ -18,14 +18,11 @@ def process_main():
     sid, nick, platform, soft_code, source = "", "", "pinduoduo", "kjsh", "script-check_copy_paste"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     wait_task = copy_service.get_check_copy_complex_task()
-    keys = ["dst_num_iid", "_id", "sid", "nick", "platform", "soft_code"]
-    num_iid, in_id, sid, nick, platform, soft_code = [wait_task[key] for key in keys]
+    keys = ["dst_num_iid", "_id", "task_id", "sid", "nick", "platform", "soft_code"]
+    num_iid, in_id, task_id, sid, nick, platform, soft_code = [wait_task[key] for key in keys]
     # 重新生成copy_service
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     try:
-        import pdb
-
-        pdb.set_trace()
         commit_info = copy_service.get_pdd_goods_commit_status([num_iid])[0]
         check_status = commit_info["check_status"]
         if check_status == 3:
@@ -33,6 +30,11 @@ def process_main():
             update_dict = dict(check_status="#FAIL#", check_fail_msg=check_fail_msg)
         else:
             update_dict = dict(check_status="#FINISH#")
+            # 用户选择仓库中，下架商品。
+            simple_task = copy_service.get_copy_simple_task(task_id)
+            item_status = simple_task["item_set"]["item_status"]
+            if item_status == "#STOCK#":
+                copy_service.set_pdd_goods_status(num_iid, 0)
         copy_service.update_complex_task_by_params(in_id, update_dict)
     except Exception as ex:
         update_dict = dict(check_status="#FAIL#", check_fail_msg="xxx")

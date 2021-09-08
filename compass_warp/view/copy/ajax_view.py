@@ -16,7 +16,8 @@ def ajax_create_copy_task(request):
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     keys = ["copy_urls", "item_set", "price_set", "advanced_set"]
     copy_urls, item_set, price_set, advanced_set = [request.json[key] for key in keys]
-    copy_service.save_copy_task(copy_urls, item_set, price_set, advanced_set)
+    copy_urls, filter_urls, invalid_urls, valid_urls = copy_service.save_copy_task(copy_urls, item_set, price_set, advanced_set)
+    return_dict["data"] = dict(copy_urls=copy_urls, filter_urls=filter_urls, invalid_urls=invalid_urls, valid_urls=valid_urls)
     return JsonResponse(return_dict)
 
 
