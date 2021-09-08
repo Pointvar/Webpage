@@ -1,13 +1,12 @@
 from django.http import JsonResponse
-from datetime import datetime
-
-
+from django.contrib.auth.decorators import login_required
 from compass_warp.common.decorator import ajax_json_validate
 from compass_warp.service.shop_service import ShopService
 from compass_warp.service.version_service import VersionService
 from compass_warp.view.main.ajax_schema import *
 
 
+@login_required
 @ajax_json_validate(ajax_get_shop_info_schema)
 def ajax_get_shop_info(request):
     return_dict = {"success": True, "data": ""}

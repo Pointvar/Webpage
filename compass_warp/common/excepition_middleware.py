@@ -1,6 +1,7 @@
 import logging
 from django.http import response
 from django.http.response import JsonResponse
+from compass_warp.compass.settings import OAUTH_CONF_PDD
 from compass_warp.common.exceptions import *
 from pdd_models.common.exceptions import TokenExpireException
 
@@ -28,17 +29,17 @@ class ExceptionMiddleware:
             request.META["HTTP_USER_AGENT"],
             request.META.get("HTTP_REFERER", ""),
         )
-        ret_data = {"success": False, "data": {"code": 0, "msg": self.DEFAULT_ERROR}}
+        ret_data = {"success": False, "data": {"code": 1000, "msg": self.DEFAULT_ERROR}}
         if isinstance(exception, InvalidInputException):
             # ajax传入数据校验错误
-            ret_data["data"]["code"] = 100
+            ret_data["data"]["code"] = 1001
             ret_data["data"]["msg"] = exception.msg
             logger.exception(logger_str)
         elif isinstance(exception, TokenExpireException):
-            # 拼多多授权失效 可能2种情况，订单到期或授权失效。
-            ret_data["data"]["code"] = 200
-            ret_data["data"]["msg"] = "授权已失效"
+            ret_data["data"]["code"] = 3000
+            ret_data["data"]["msg"] = "三方授权已失效, API暂时不可调用。"
+            ret_data["data"]["process"] = OAUTH_CONF_PDD
         else:
             logger_str = "UNPROCESS_ERROR-" + logger_str
-            logger.exception(logger_str)
+        logger.exception(logger_str)
         return JsonResponse(ret_data)

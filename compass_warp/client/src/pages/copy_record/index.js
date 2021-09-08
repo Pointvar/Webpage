@@ -4,12 +4,13 @@ import ReactDOM from "react-dom";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store";
 
-import { Layout, ConfigProvider, Table, Progress, Button, Popover } from "antd";
+import { Layout, ConfigProvider, Table, Progress, Button, Popover, Form } from "antd";
 const { Content } = Layout;
 import zhCN from "antd/lib/locale/zh_CN";
 
 import PageHeader from "@/components/page-header";
-import TableArea from "@/components/table_area";
+import TableHeader from "@/components/table-header";
+import TableArea from "@/components/table-area";
 import PageFooter from "@/components/page-footer";
 
 import { NAV_MENUS } from "@/constants/common";
@@ -247,6 +248,8 @@ function CopyRecord() {
     dispatch(getCopyComplexTasks({}));
   }, []);
 
+  const initialValues = { filterTitle: null, filterId: null, filterPlatform: "#ALL#", filterStatus: "#ALL#" };
+
   const filterData = useSelector(selectFilterData);
   const { filterTitle, filterId, filterPlatform, filterStatus } = filterData;
   if (filterTitle) {
@@ -284,6 +287,7 @@ function CopyRecord() {
     dispatch(setfilterStatus(status));
   };
   const onClickRestSearch = () => {
+    form.resetFields();
     dispatch(setFilterData());
   };
 
@@ -300,17 +304,18 @@ function CopyRecord() {
     onChange: onSelectChange,
     selections: [Table.SELECTION_ALL, Table.SELECTION_NONE],
   };
+  const [form] = Form.useForm();
 
   return (
     <Fragment>
       <PageHeader {...headerProps} shopInfo={shopInfo} />
       <Content>
-        <TableArea
-          columns={columns}
-          dataSource={complexTasks}
-          rowSelection={rowSelection}
+        <TableHeader
+          initialValues={initialValues}
+          form={form}
           statusMaps={statusMaps}
           platformMaps={platformMaps}
+          dataSource={complexTasks}
           selectedKeys={selectedKeys}
           onSearchTitle={onSearchTitle}
           onSearchId={onSearchId}
@@ -319,6 +324,7 @@ function CopyRecord() {
           onClickRestSearch={onClickRestSearch}
           onClickHideTasks={onClickHideTasks}
         />
+        <TableArea columns={columns} dataSource={complexTasks} rowSelection={rowSelection} />
       </Content>
       <PageFooter />
     </Fragment>

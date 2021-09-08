@@ -1,14 +1,17 @@
 const { merge } = require("webpack-merge");
 const path = require("path");
+const pages = require("./webpack.entry");
 const webpackBase = require("./webpack.base");
+var HtmlWebpackPlugin = require("html-webpack-plugin");
 
 let webpackDev = merge(webpackBase, {
   mode: "development",
   devtool: "eval-cheap-module-source-map",
   output: {
-    filename: "[name].js",
-    path: path.resolve(__dirname, "../build/js"),
+    filename: "js/[name].js",
+    path: path.resolve(__dirname, "../build/"),
   },
+  plugins: [],
   module: {
     rules: [
       {
@@ -31,7 +34,7 @@ let webpackDev = merge(webpackBase, {
         type: "asset",
         parser: {
           dataUrlCondition: {
-            maxSize: 10 * 1024,
+            maxSize: 4 * 1024,
           },
         },
       },
@@ -53,4 +56,14 @@ let webpackDev = merge(webpackBase, {
     },
   },
 });
+
+for (let page of pages) {
+  const htmlConf = {
+    title: page.title,
+    filename: page.entry + ".html",
+    template: "./src/pages/index.html",
+    chunks: [page.entry],
+  };
+  webpackDev.plugins.push(new HtmlWebpackPlugin(htmlConf));
+}
 module.exports = webpackDev;

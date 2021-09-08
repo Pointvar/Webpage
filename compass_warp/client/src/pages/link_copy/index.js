@@ -4,8 +4,10 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "@/store";
 
 import { InfoCircleTwoTone, InfoCircleOutlined, CheckCircleTwoTone } from "@ant-design/icons";
-import { Form, Button, Modal, Layout } from "antd";
+import { Form, Button, Modal, Layout, ConfigProvider } from "antd";
 const { Content } = Layout;
+
+import zhCN from "antd/lib/locale/zh_CN";
 
 import PageHeader from "@/components/page-header";
 import InputArea from "@/components/input-area";
@@ -39,7 +41,7 @@ const initialValues = {
     item_status: "ONSALE",
     item_detail: "AUTO",
     item_title: "FRONT",
-    ship_id: "ADD",
+    ship_id: null,
     custom_category: null,
   },
   price_set: {
@@ -104,7 +106,7 @@ const CopyTabProps = {
               ②若无运费模版，请点击右侧运费模版管理按钮。创建模版后刷新当前页面！
             </span>
           ),
-          ruleMessage: "检测到未选择运费模版，请选择运费模版。",
+          ruleMessage: "检测到无运费模版！请点击右侧运费模版管理按钮，创建模版后刷新当前页面重试。",
         },
         {
           label: "商品状态",
@@ -326,9 +328,11 @@ function LinkCopy() {
 }
 
 ReactDOM.render(
-  <Provider store={store}>
-    <LinkCopy />
-  </Provider>,
+  <ConfigProvider locale={zhCN}>
+    <Provider store={store}>
+      <LinkCopy />
+    </Provider>
+  </ConfigProvider>,
   document.getElementById("root")
 );
 

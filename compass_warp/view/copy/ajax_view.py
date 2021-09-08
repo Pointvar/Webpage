@@ -1,10 +1,12 @@
 from django.http import JsonResponse
-from datetime import datetime
+
+from django.contrib.auth.decorators import login_required
 from compass_warp.common.decorator import ajax_json_validate
 from compass_warp.service.copy_service import CopyService
 from compass_warp.view.copy.ajax_schema import *
 
 
+@login_required
 @ajax_json_validate(ajax_create_copy_task_schema)
 def ajax_create_copy_task(request):
     return_dict = {"success": True, "data": ""}
@@ -18,6 +20,7 @@ def ajax_create_copy_task(request):
     return JsonResponse(return_dict)
 
 
+@login_required
 @ajax_json_validate(ajax_get_logistic_templates_schema)
 def ajax_get_logistic_templates(request):
     return_dict = {"success": True, "data": ""}
@@ -30,6 +33,7 @@ def ajax_get_logistic_templates(request):
     return JsonResponse(return_dict)
 
 
+@login_required
 @ajax_json_validate(ajax_get_authorize_cats_schema)
 def ajax_get_authorize_cats(request):
     return_dict = {"success": True, "data": ""}
@@ -42,6 +46,7 @@ def ajax_get_authorize_cats(request):
     return JsonResponse(return_dict)
 
 
+@login_required
 @ajax_json_validate(ajax_get_copy_complex_tasks_schema)
 def ajax_get_copy_complex_tasks(request):
     return_dict = {"success": True, "data": ""}
@@ -54,6 +59,7 @@ def ajax_get_copy_complex_tasks(request):
     return JsonResponse(return_dict)
 
 
+@login_required
 @ajax_json_validate(ajax_hide_copy_complex_tasks_schema)
 def ajax_hide_copy_complex_tasks(request):
     return_dict = {"success": True, "data": ""}

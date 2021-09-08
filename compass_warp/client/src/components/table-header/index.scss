@@ -1,0 +1,26 @@
+.table_header_box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  .filter_box {
+    display: flex;
+    .filter_element {
+      margin-bottom: 0px;
+      margin-right: 6px;
+      .ant-input-group-wrapper {
+        width: auto;
+      }
+    }
+  }
+  .operator {
+    display: flex;
+    align-items: center;
+    .operator_info {
+      margin-right: 32px;
+    }
+    .selectMessage {
+      color: red;
+    }
+  }
+}
