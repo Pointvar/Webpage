@@ -18,6 +18,7 @@ from furl import furl
 from random import randint
 from bs4 import BeautifulSoup
 from string import digits, ascii_letters, punctuation
+from concurrent.futures import ThreadPoolExecutor
 
 from pdd_models.add_pdd_goods import AddPddGoods
 from pdd_models.get_pdd_goods_spec import GetPddGoodsSpec
@@ -68,15 +69,15 @@ class CopyService:
         parser_dict = furl(copy_url)
         host = parser_dict.host
         if "taobao" in host:
-            source = "#TAOBAO#"
+            item_source = "#TAOBAO#"
             num_iid = parser_dict.args["id"]
             parser_dict.args = dict(id=num_iid)
         elif "tmall" in host:
-            source = "#TINAMAO#"
+            item_source = "#TIANMAO#"
             num_iid = parser_dict.args["id"]
             parser_dict.args = dict(id=num_iid)
         parsed_url = parser_dict.url
-        return source, num_iid, parsed_url
+        return item_source, int(num_iid), parsed_url
 
     def _get_process_price(self, price_dict, price):
         max_price = price * 1.08
@@ -163,7 +164,7 @@ class CopyService:
         task_id = self.copy_simple_task_db.save_simple_task(item_set, price_set, advanced_set, amount)
         for index, copy_url in enumerate(copy_urls):
             try:
-                source, num_iid, parsed_url = self._get_copy_url_info(copy_url)
+                item_source, num_iid, parsed_url = self._get_copy_url_info(copy_url)
             except Exception as ex:
                 invalid_urls.append(copy_url)
                 continue
@@ -173,7 +174,7 @@ class CopyService:
                 if same_mark:
                     filter_urls.append(copy_url)
                     continue
-            self.copy_complex_task_db.save_complex_task(task_id, copy_url, source, num_iid, parsed_url, index, amount)
+            self.copy_complex_task_db.save_complex_task(task_id, copy_url, item_source, num_iid, parsed_url, index, amount)
             valid_urls.append(copy_url)
         return copy_urls, filter_urls, invalid_urls, valid_urls
 
@@ -217,7 +218,7 @@ class CopyService:
         # 基本信息解析
         keys = ["itemId", "title", "images", "categoryId", "rootCategoryId"]
         num_iid, title, main_pics, category_id, root_category_id = [item_dict["item"][key] for key in keys]
-        main_pics = map(lambda x: "https:" + x + "_800x800.{0}".format(x.split(".")[-1]), main_pics)
+        main_pics = list(map(lambda x: "https:" + x, main_pics))
 
         # desc_url = "https://detail.tmall.com/templates/pages/desc?id={0}".format(num_iid)
         # desc_html = self._get_response_by_url(desc_url)
@@ -382,17 +383,41 @@ class CopyService:
         pdd_submit.update(sku_list=sku_list)
         return pdd_submit
 
-    def process_submit_by_upload_images(self, submit_dict):
+    def pdd_upload_image_single(self, params):
+        image_url, image_width = params
+        try:
+            online_url = self.pdd_upload_image_feature_api.upload_pdd_goods_image_feature(image_url, image_width)
+        except Exception as ex:
+            online_url = None
+        return (image_url, online_url)
+
+    def process_submit_by_upload_images(self, submit_dict, item_source):
         # 上传解析完数据内图片
-        replace_info = {}
-        submit_str = json.dumps(submit_dict)
-        image_urls = set(re.findall(r'//img.alicdn.com/.*?(?=")', submit_str))
-        for image_url in image_urls:
-            online_url = self.pdd_upload_image_feature_api.upload_pdd_goods_image_feature(online_url, 800)
-            replace_info[image_url] = online_url
-        for replace_key, replace_value in replace_info.items():
-            submit_str = submit_str.replace(replace_key, replace_value)
-        submit_dict = json.loads(submit_str)
+        keys = ["carousel_gallery", "detail_gallery", "sku_list"]
+        main_pics, detail_pics, sku_pics = [submit_dict[key] for key in keys]
+        sku_pics = list(map(lambda x: x["thumb_url"], sku_pics))
+        main_pics = set(main_pics + sku_pics)
+        detail_width = 790 if item_source == "#TIANMAO#" else 750
+        detail_params = [(detail_pic, detail_width) for detail_pic in detail_pics]
+        # 获取800X800的图片
+        main_params = [(main_pic + "_800x800.{0}".format(main_pic.split(".")[-1]), 800) for main_pic in main_pics]
+        all_params = main_params + detail_params
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            image_maps = executor.map(self.pdd_upload_image_single, all_params)
+
+        image_maps = dict(list(filter(lambda x: x[1], image_maps)))
+        for key in ["carousel_gallery", "detail_gallery"]:
+            process_urls = []
+            for image_url in submit_dict[key]:
+                if image_url in image_maps:
+                    process_urls.append(image_url)
+            submit_dict[key] = process_urls
+
+        init_thumb_url = submit_dict["carousel_gallery"][0]
+        for sku in submit_dict["sku_list"]:
+            thumb_url = image_maps.get(sku["thumb_url"], init_thumb_url)
+            sku["thumb_url"] = thumb_url
         return submit_dict
 
     def add_pdd_item(self, item_submit):
@@ -409,7 +434,11 @@ class CopyService:
 if __name__ == "__main__":
     sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
-    print(copy_service._get_process_title("我的，6666", "END", 7))
+    print(
+        copy_service.pdd_upload_image_single(
+            ("https://img.alicdn.com/imgextra/i2/3584334822/O1CN01CyiBRG1lUWW7f3oDQ_!!3584334822.jpg_800x800.jpg", 800)
+        )
+    )
     # print(copy_service.pdd_get_commit_status_api.get_pdd_goods_commit_status([70607709402]))
     # item_html = copy_service.get_taobao_item_api(625435033956)
     # print(copy_service.pdd_get_spec_api.get_pdd_goods_spec(8132))

@@ -35,7 +35,7 @@ const headerProps = {
 
 // 表单默认参数
 const initialValues = {
-  copy_urls: [],
+  copy_urls: "",
   item_set: {
     categray_type: "#AUTO#",
     filter_same: true,
@@ -286,7 +286,6 @@ function LinkCopy() {
   }, []);
   if (logisticTemplates.length) {
     CopyTabProps.tabInfos[0].tabContents[1].selectInfos = logisticTemplates;
-    CopyTabProps.tabInfos[0].tabContents[1].defaultValue = logisticTemplates[0].key;
     initialValues.item_set.ship_id = logisticTemplates[0].key;
   }
   CopyTabProps.tabInfos[0].tabContents[0].component.optionInfos = authorizeCats;
@@ -309,18 +308,29 @@ function LinkCopy() {
           okText: <a href="/copy_record">查看记录</a>,
           cancelText: "继续复制",
           onCancel: () => {
-            form.setFieldsValue({ copy_urls: [] });
+            form.setFieldsValue({ copy_urls: "" });
           },
         });
       }
     });
   };
+  const onChangeFormatInput = (event) => {
+    const preValue = event.target.value + "https://";
+    const matchUrls = preValue.match(/https?.*?(?=(https?:\/\/|\n))/g);
+    let copy_urls;
+    if (matchUrls) {
+      const filterUrls = Array.from(new Set(matchUrls));
+      copy_urls = filterUrls.join("\n");
+      form.setFieldsValue({ copy_urls: copy_urls });
+    }
+  };
+
   return (
     <Fragment>
       <PageHeader {...headerProps} shopInfo={shopInfo} />
       <Content>
         <Form initialValues={initialValues} form={form} requiredMark={false} onFinish={handlerCopySubmit}>
-          <InputArea />
+          <InputArea onChangeFormatInput={onChangeFormatInput} />
           <PropTabs {...CopyTabProps} form={form} />
           <Form.Item>
             <Button type="primary" htmlType="submit" size="large">

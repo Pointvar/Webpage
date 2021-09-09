@@ -35,6 +35,8 @@ const initialState = {
   filterData: { filterTitle: null, filterId: null, filterPlatform: "#ALL#", filterStatus: "#ALL#" },
   logisticTemplates: [],
   authorizeCats: [],
+  loopTimes: 0,
+  currentPageDatas: [],
 };
 
 // 生成切片对象
@@ -60,6 +62,12 @@ const copySlice = createSlice({
     setSelectedKeys: (state, action) => {
       state.selectedKeys = action.payload;
     },
+    setLoopTimes: (state, action) => {
+      state.loopTimes = action.payload;
+    },
+    setCurrentPageDatas: (state, action) => {
+      state.currentPageDatas = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(createCopyTask.fulfilled, () => {});
@@ -82,12 +90,22 @@ const copySlice = createSlice({
   },
 });
 
-export const { setFilterTitle, setFilterId, setFilterPlatform, setfilterStatus, setFilterData, setSelectedKeys } =
-  copySlice.actions;
+export const {
+  setFilterTitle,
+  setFilterId,
+  setFilterPlatform,
+  setfilterStatus,
+  setFilterData,
+  setSelectedKeys,
+  setLoopTimes,
+  setCurrentPageDatas,
+} = copySlice.actions;
 export const selectComplexTasks = (state) => state.copy.complexTasks;
 export const selectSelectedKeys = (state) => state.copy.selectedKeys;
 export const selectFilterData = (state) => state.copy.filterData;
 export const selectlogisticTemplates = (state) => state.copy.logisticTemplates;
 export const selectAuthorizeCats = (state) => state.copy.authorizeCats;
+export const selectLoopTimes = (state) => state.copy.loopTimes;
+export const selectCurrentPageDatas = (state) => state.copy.currentPageDatas;
 
 export default copySlice.reducer;

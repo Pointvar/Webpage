@@ -80,7 +80,7 @@ let webpackPrd = merge(webpackBase, {
 // 自动生成Html文件
 for (let page of pages) {
   const htmlConf = {
-    title: page.title,
+    title: "快捷搬家 | " + page.title,
     filename: "templates/" + page.entry + ".html",
     template: "./src/pages/index.html",
     chunks: ["vendor", "common", page.entry],

@@ -60,7 +60,7 @@ let webpackDev = merge(webpackBase, {
 
 for (let page of pages) {
   const htmlConf = {
-    title: page.title,
+    title: "快捷搬家 | " + page.title,
     filename: page.entry,
     template: "./src/pages/index.html",
     chunks: [page.entry],

@@ -18,6 +18,8 @@ def process_main():
     sid, nick, platform, soft_code, source = "", "", "pinduoduo", "kjsh", "script-check_copy_paste"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     wait_task = copy_service.get_check_copy_complex_task()
+    if not wait_task:
+        return
     keys = ["dst_num_iid", "_id", "task_id", "sid", "nick", "platform", "soft_code"]
     num_iid, in_id, task_id, sid, nick, platform, soft_code = [wait_task[key] for key in keys]
     # 重新生成copy_service
@@ -37,7 +39,8 @@ def process_main():
                 copy_service.set_pdd_goods_status(num_iid, 0)
         copy_service.update_complex_task_by_params(in_id, update_dict)
     except Exception as ex:
-        update_dict = dict(check_status="#FAIL#", check_fail_msg="xxx")
+        check_fail_msg = str(ex)
+        update_dict = dict(check_status="#FAIL#", check_fail_msg=check_fail_msg)
         copy_service.update_complex_task_by_params(in_id, update_dict)
 
 

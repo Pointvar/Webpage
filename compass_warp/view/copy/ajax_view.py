@@ -57,6 +57,14 @@ def ajax_get_copy_complex_tasks(request):
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     complex_tasks = copy_service.get_show_complex_tasks()
     return_dict["data"] = complex_tasks
+    # props = []
+    # from copy import deepcopy
+
+    # for i in range(100):
+    #     props.extend(deepcopy(complex_tasks))
+    # return_dict["data"] = props
+    # for index, x in enumerate(return_dict["data"]):
+    #     x["_id"] = str(index)
     return JsonResponse(return_dict)
 
 

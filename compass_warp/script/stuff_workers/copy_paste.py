@@ -18,8 +18,10 @@ def process_main():
     sid, nick, platform, soft_code, source = "", "", "pinduoduo", "kjsh", "script-copy_paste"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     wait_task = copy_service.get_wait_copy_complex_task()
-    keys = ["src_num_iid", "task_id", "_id", "sid", "nick", "platform", "soft_code"]
-    num_iid, task_id, in_id, sid, nick, platform, soft_code = [wait_task[key] for key in keys]
+    if not wait_task:
+        return
+    keys = ["src_num_iid", "item_source", "task_id", "_id", "sid", "nick", "platform", "soft_code"]
+    num_iid, item_source, task_id, in_id, sid, nick, platform, soft_code = [wait_task[key] for key in keys]
     # 重新生成copy_service
     copy_service = CopyService(sid, nick, platform, soft_code, source)
     try:
@@ -42,7 +44,7 @@ def process_main():
         update_dict = dict(itme_title=itme_title, main_pic=main_pic, status="#PROCESS#", process_step=65)
         copy_service.update_complex_task_by_params(in_id, update_dict)
         # 上传图片数据到拼多多
-        pdd_submit = copy_service.process_submit_by_upload_images(pdd_submit)
+        pdd_submit = copy_service.process_submit_by_upload_images(pdd_submit, item_source)
         update_dict = dict(itme_title=itme_title, main_pic=main_pic, status="#PROCESS#", process_step=95)
         copy_service.update_complex_task_by_params(in_id, update_dict)
         dst_num_iid, submit_id = copy_service.add_pdd_item(pdd_submit)
@@ -50,7 +52,8 @@ def process_main():
         update_dict = dict(dst_num_iid=dst_num_iid, submit_id=submit_id, status="#FINISH#", check_status="#PROCESS#")
         copy_service.update_complex_task_by_params(in_id, update_dict)
     except Exception as ex:
-        update_dict = dict(dst_num_iid=dst_num_iid, submit_id=submit_id, status="#FAIL#", exception_msg="")
+        exception_msg = str(ex)
+        update_dict = dict(status="#FAIL#", exception_msg=exception_msg)
         copy_service.update_complex_task_by_params(in_id, update_dict)
 
 

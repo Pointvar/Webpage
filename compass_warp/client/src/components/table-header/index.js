@@ -20,7 +20,6 @@ function TableHeader({
   onClickRestSearch,
   onClickHideTasks,
 }) {
-  console.log("xxxxx", selectedKeys.length, dataSource.length);
   return (
     <div className="table_header_box">
       <Form initialValues={initialValues} form={form} className="filter_box">

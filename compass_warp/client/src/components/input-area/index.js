@@ -8,7 +8,7 @@ import taobaoLogo from "@/public/taobao_logo.png";
 import tmallLogo from "@/public/tmall_logo.png";
 const { TextArea } = Input;
 
-function InputArea() {
+function InputArea({ onChangeFormatInput }) {
   return (
     <div className="input-area-box">
       <div className="platforms">
@@ -31,7 +31,13 @@ function InputArea() {
             },
           ]}
         >
-          <TextArea rows={10} allowClear bordered placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。" />
+          <TextArea
+            rows={10}
+            allowClear
+            bordered
+            placeholder="提示：支持输入不同平台的宝贝链接，一次可输入多个宝贝链接。文本框内自动格式化链接，无须手工换行。文本框内自动过滤重复链接，无须注意是否输入重复链接。"
+            onChange={onChangeFormatInput}
+          />
         </Form.Item>
       </div>
     </div>

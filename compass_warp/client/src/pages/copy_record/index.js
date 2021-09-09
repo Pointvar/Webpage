@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 
 import { Provider, useDispatch, useSelector } from "react-redux";
@@ -20,14 +20,19 @@ import {
   selectComplexTasks,
   selectFilterData,
   selectSelectedKeys,
+  selectLoopTimes,
+  selectCurrentPageDatas,
   setFilterTitle,
   setFilterId,
   setFilterPlatform,
   setfilterStatus,
   setFilterData,
   setSelectedKeys,
+  setLoopTimes,
+  setCurrentPageDatas,
 } from "@/features/copy-slice";
-import { includes, isEqual, reduce } from "lodash";
+import _ from "lodash";
+import useInterval from "@/hooks/timer-hook";
 
 import "antd/dist/antd.css";
 import "./index.scss";
@@ -45,7 +50,7 @@ const statusMaps = [
   { key: "#FAIL#", value: "任务失败" },
 ];
 
-const columnsStatusMaps = reduce(
+const columnsStatusMaps = _.reduce(
   statusMaps,
   (object, dict) => {
     object[dict.key] = dict.value;
@@ -61,7 +66,7 @@ const checkMaps = [
   { key: "#FAIL#", value: "审核驳回" },
 ];
 
-const checkStatusMaps = reduce(
+const checkStatusMaps = _.reduce(
   checkMaps,
   (object, dict) => {
     object[dict.key] = dict.value;
@@ -76,7 +81,7 @@ const platformMaps = [
   { key: "#TIANMAO#", value: "天猫" },
 ];
 
-const platformStatusMaps = reduce(
+const platformStatusMaps = _.reduce(
   platformMaps,
   (object, dict) => {
     object[dict.key] = dict.value;
@@ -183,7 +188,7 @@ const columns = [
   },
   {
     title: "来源",
-    dataIndex: "source",
+    dataIndex: "item_source",
     align: "center",
     render: (text) => {
       return platformStatusMaps[text];
@@ -241,7 +246,8 @@ const columns = [
 // 我的记录页面主体
 function CopyRecord() {
   const dispatch = useDispatch();
-  let complexTasks = useSelector(selectComplexTasks);
+  const [form] = Form.useForm();
+  const tableRef = useRef(null);
   const shopInfo = useSelector(selectShopInfo);
   useEffect(() => {
     dispatch(getShopInfo({}));
@@ -250,27 +256,28 @@ function CopyRecord() {
 
   const initialValues = { filterTitle: null, filterId: null, filterPlatform: "#ALL#", filterStatus: "#ALL#" };
 
+  let complexTasks = useSelector(selectComplexTasks);
   const filterData = useSelector(selectFilterData);
   const { filterTitle, filterId, filterPlatform, filterStatus } = filterData;
   if (filterTitle) {
     complexTasks = complexTasks.filter((element) => {
-      return includes(element.itme_title, filterTitle);
+      return _.includes(element.itme_title, filterTitle);
     });
   }
   if (filterId) {
     complexTasks = complexTasks.filter((element) => {
-      return isEqual(element.src_num_iid, filterId) || isEqual(element.dst_num_iid, filterId);
+      return _.isEqual(element.src_num_iid, filterId) || _.isEqual(element.dst_num_iid, filterId);
     });
   }
   if (filterPlatform !== "#ALL#") {
     complexTasks = complexTasks.filter((element) => {
-      return isEqual(element.source, filterPlatform);
+      return _.isEqual(element.item_source, filterPlatform);
     });
   }
 
   if (filterStatus !== "#ALL#") {
     complexTasks = complexTasks.filter((element) => {
-      return isEqual(element.status, filterStatus);
+      return _.isEqual(element.status, filterStatus);
     });
   }
   // 表格操作区域
@@ -304,7 +311,47 @@ function CopyRecord() {
     onChange: onSelectChange,
     selections: [Table.SELECTION_ALL, Table.SELECTION_NONE],
   };
-  const [form] = Form.useForm();
+
+  const loopTimes = useSelector(selectLoopTimes);
+  const currentPageDatas = useSelector(selectCurrentPageDatas);
+  // 控制间隔时间 12次5秒 12次10秒 12次30秒
+  let delay;
+  if (loopTimes <= 12) {
+    delay = 5000;
+  } else if (loopTimes <= 24) {
+    delay = 10000;
+  } else if (loopTimes <= 36) {
+    delay = 30000;
+  } else {
+    delay = null;
+  }
+
+  const currentStatus = [];
+  for (let currentPageData of currentPageDatas) {
+    currentStatus.push(currentPageData.status);
+    currentStatus.push(currentPageData.check_status);
+  }
+  const filterCurrentStatus = _.filter(currentStatus, (element) => {
+    return element !== "#FINISH#" || element !== "#FAIL#";
+  });
+  if (!filterCurrentStatus) {
+    delay = null;
+  }
+
+  // 重新获取当前页面的任务列表
+  const getCurrentPageDatas = () => {
+    if (tableRef.current) {
+      const CurrentIds = tableRef.current.getCurrentPageData();
+      const CurrentPageDatas = complexTasks.filter((element) => _.includes(CurrentIds, element._id));
+      dispatch(setCurrentPageDatas(CurrentPageDatas));
+    }
+  };
+
+  useInterval(() => {
+    getCurrentPageDatas();
+    dispatch(getCopyComplexTasks({}));
+    dispatch(setLoopTimes(loopTimes + 1));
+  }, delay);
 
   return (
     <Fragment>
@@ -324,7 +371,7 @@ function CopyRecord() {
           onClickRestSearch={onClickRestSearch}
           onClickHideTasks={onClickHideTasks}
         />
-        <TableArea columns={columns} dataSource={complexTasks} rowSelection={rowSelection} />
+        <TableArea ref={tableRef} columns={columns} dataSource={complexTasks} rowSelection={rowSelection} />
       </Content>
       <PageFooter />
     </Fragment>
