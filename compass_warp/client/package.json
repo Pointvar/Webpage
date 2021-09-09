@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "webpack serve --progress --compress --color --config config/webpack.dev.js",
     "prd": "webpack --progress --config config/webpack.prd.js",
-    "report": "webpack-bundle-analyzer -p 8803 -h 0.0.0.0 ./dist/js/stats.json"
+    "report": "webpack-bundle-analyzer -p 8000 -h 0.0.0.0 ./dist/stats.json"
   },
   "author": "",
   "repository": "",

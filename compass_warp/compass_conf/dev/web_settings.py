@@ -63,7 +63,7 @@ ROOT_URLCONF = "compass.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates/dev")],
+        "DIRS": [os.path.join(BASE_DIR, "templates/")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -155,18 +155,6 @@ STATICFILES_DIRS = [
 
 # Auth Backends
 AUTHENTICATION_BACKENDS = ["auth.backends.OAuthBackend"]
-
-
-# # 淘宝
-# OAUTH_REDIRECT_TB = {"taobao": "https://{0}/auth/taobao".format(SERVER_HOST)}
-# APP_CONF_TB = {"APP_KEY": 23525554, "APP_SECRET": "a97d2c608806f706197c4e619e032b9b"}
-# OAUTH_CONF_TB = {
-#     "token_url": "https://oauth.taobao.com/token",
-#     "auth_url": "https://oauth.taobao.com/authorize?response_type=code&client_id={0}&redirect_uri={1}&state=1212&view=web".format(
-#         APP_CONF_TB["APP_KEY"], OAUTH_REDIRECT_TB["taobao"]
-#     ),
-#     "redirect_url": OAUTH_REDIRECT_TB["taobao"],
-# }
 
 # OAUTH2配置文件
 SERVER_HOST = "www.safaritechx.com"
