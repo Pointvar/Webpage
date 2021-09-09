@@ -83,6 +83,7 @@ for (let page of pages) {
     title: "快捷搬家 | " + page.title,
     filename: "templates/" + page.entry + ".html",
     template: "./src/pages/index.html",
+    favicon: "./src/public/kjsh.ico",
     chunks: ["vendor", "common", page.entry],
   };
   webpackPrd.plugins.push(new HtmlWebpackPlugin(htmlConf));
