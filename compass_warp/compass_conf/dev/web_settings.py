@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "common.auth_middleware.AuthMiddleware",
     "common.excepition_middleware.ExceptionMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
 ]
 
 ROOT_URLCONF = "compass.urls"
@@ -63,7 +64,7 @@ ROOT_URLCONF = "compass.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates/")],
+        "DIRS": [os.path.join(BASE_DIR, "client/dist/templates/")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -150,7 +151,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "client/dist/"),
 ]
 
 # Auth Backends

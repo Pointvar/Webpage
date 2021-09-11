@@ -3,7 +3,6 @@ const webpackBase = require("./webpack.base");
 const { merge } = require("webpack-merge");
 const pages = require("./webpack.entry");
 
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 var HtmlWebpackPlugin = require("html-webpack-plugin");
 
@@ -39,9 +38,6 @@ let webpackPrd = merge(webpackBase, {
     },
   },
   plugins: [
-    new MiniCssExtractPlugin({
-      filename: "css/[name]_[contenthash:6].css",
-    }),
     new BundleAnalyzerPlugin({
       analyzerMode: "disabled",
       generateStatsFile: true,
@@ -62,7 +58,7 @@ let webpackPrd = merge(webpackBase, {
       },
       {
         test: /\.(css|scss)$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+        use: ["style-loader", "css-loader", "sass-loader"],
       },
       {
         test: /\.(png|jpg|gif|ico)$/,

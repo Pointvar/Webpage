@@ -198,6 +198,10 @@ const columns = [
     title: "上货时间",
     dataIndex: "c_time",
     align: "center",
+    render: (text) => {
+      console.log(text);
+      return text.split(".")[0].replace("T", " ");
+    },
   },
   {
     title: "商品ID",

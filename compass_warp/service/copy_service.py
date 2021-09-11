@@ -9,10 +9,10 @@ if __name__ == "__main__":
 
 import re
 import json
-import math
-import hashlib
 import requests
+import jieba
 from collections import ChainMap
+from functools import reduce
 from itertools import product
 from furl import furl
 from random import randint
@@ -34,6 +34,8 @@ from pdd_models.set_pdd_goods_sale_status import SetPddGoodsSaleStatus
 from db_models.category_infos.pdd_category_db import PddCategoryDB
 from db_models.copy_infos.simple_task_db import CopySimpleTaskDB
 from db_models.copy_infos.complex_task_db import CopyComplexTaskDB
+from db_models.copy_infos.pdd_sku_match_db import CopyPddSkuMatchDB
+from db_models.copy_infos.pdd_prop_match_db import CopyPddPropMatchDB
 
 import logging
 
@@ -64,6 +66,8 @@ class CopyService:
         self.pdd_categroy_db = PddCategoryDB(sid, nick, platform, soft_code)
         self.copy_simple_task_db = CopySimpleTaskDB(sid, nick, platform, soft_code)
         self.copy_complex_task_db = CopyComplexTaskDB(sid, nick, platform, soft_code)
+        # self.copy_pdd_sku_match = CopyPddSkuMatchDB(sid, nick, platform, soft_code)
+        # self.copy_pdd_prop_match = CopyPddPropMatchDB(sid, nick, platform, soft_code)
 
     def _get_copy_url_info(self, copy_url):
         parser_dict = furl(copy_url)
@@ -128,6 +132,38 @@ class CopyService:
             propPath = ";".join([prop_paths[0], "".join(prop_paths[1:])])
             sku_info["propPath"] = propPath
         return process_props, sku_infos
+
+    def _get_match_prop_name(self, spec_names, input_name, choose_names=[]):
+        # 获取合适的prop_name
+        # input_name: ['颜色' 10, '分类' 8] spec_names['颜色'] 10 ['分类'] 8 ['颜色', '类型'] 10分 ['颜色', '分类'] 18分
+        split_names = list(jieba.cut(input_name))
+        score_infos = []
+        for index, spec_name in enumerate(spec_names):
+            scores = []
+            for split_spec in spec_name:
+                score = 10 - split_names.index(split_spec) * 2 if split_spec in split_names else 0
+                scores.append(score)
+            score_info = dict(index=index, score=sum(scores), quantity=len(scores), spec_name="".join(spec_name))
+            score_infos.append(score_info)
+        score_infos = [x for x in score_infos if x["score"] != 0 and x["spec_name"] not in choose_names]
+        if score_infos:
+            max_score = max(map(lambda x: x["score"], score_infos))
+            max_scores = [x for x in score_infos if x["score"] == max_score]
+            match_name = sorted(max_scores, key=lambda x: x["quantity"])[0]["spec_name"]
+        else:
+            match_name = None
+        return match_name
+
+    def _get_pdd_prop_names(self, propertie_rule, propertie_rules, ref_maps):
+        propertie_names = {x["ref_pid"]: x["name"] for x in propertie_rules}
+        ref_pids = [propertie_rule["ref_pid"]]
+        pdd_prop_names = []
+        while ref_pids:
+            ref_pid = ref_pids.pop()
+            pdd_prop_names.append(propertie_names[ref_pid])
+            last_ref_pids = [x[1] for x in ref_maps if x[0] == ref_pid]
+            ref_pids.extend(last_ref_pids)
+        return pdd_prop_names
 
     def _get_response_by_url(self, url):
         resp = requests.get(url, timeout=10)
@@ -223,16 +259,21 @@ class CopyService:
         # desc_url = "https://detail.tmall.com/templates/pages/desc?id={0}".format(num_iid)
         # desc_html = self._get_response_by_url(desc_url)
         detail_pics = []
-        keys = ["skuBase", "props", "mockData"]
-        sku_base, props, mock_data = [item_dict[key] for key in keys]
-
+        keys = ["skuBase", "props"]
+        sku_base, props = [item_dict[key] for key in keys]
+        mock_data = item_dict["apiStack"][0]["value"]
         # SKU信息和价格
         sku_props = sku_base["props"]
+        for sku_prop in sku_props:
+            for value in sku_prop["values"]:
+                if "image" in value:
+                    value["image"] = "https:" + value["image"]
+
         sku_infos = sku_base["skus"]
         sku_prices = json.loads(mock_data)["skuCore"]["sku2info"]
         for sku_info in sku_infos:
             sku_price = sku_prices[sku_info["skuId"]]
-            sku_quantity = sku_price["quantity"]
+            sku_quantity = int(sku_price["quantity"])
             sku_price = float(sku_price["price"]["priceText"])
             sku_info.update(sku_quantity=sku_quantity, sku_price=sku_price)
 
@@ -291,47 +332,110 @@ class CopyService:
             category_info = self.pdd_cat_map_api.get_pdd_goods_outer_cat_mapping(category_id, category_name, title)
             category_id = list(filter(bool, category_info))[-1]
         else:
-            category_id = item_set["custom_category"][-1]
+            category_id = list(filter(bool, item_set["custom_category"]))[-1]
 
         # 处理商品属性规则
         category_rule = self.pdd_get_cat_rule_api.get_pdd_goods_cat_rule(category_id)
         propertie_rules = category_rule["goods_properties_rule"]["properties"]
-        goods_properties, success_properties = [], []  # TODO 属性对应关系数据库化
-        for propertie_rule in propertie_rules:
-            keys = ["name", "choose_max_num", "ref_pid", "property_value_type"]
-            propertie_name, choose_mark, ref_pid, prop_type = [propertie_rule[key] for key in keys]
-            choose_values = propertie_rule.get("values", [])  # 可选项
-            if propertie_name in base_props:
-                prop_dict = {}
-                propertie_value = base_props[propertie_name]
-                choose_values = [choose_value for choose_value in choose_values if choose_value["value"] == propertie_value]
-                if choose_values:
-                    vid = choose_values[0]["vid"]
-                    prop_dict = dict(ref_pid=ref_pid, vid=vid)
-                else:
-                    if not choose_mark:
-                        if prop_type == 0:
-                            value = str(propertie_value)
-                            prop_dict = dict(ref_pid=ref_pid, value=value)
-                        elif prop_type == 1:
-                            numbers = re.findall("\d+", str(propertie_value))
-                            if numbers:
-                                value = int(numbers[0])
-                                prop_dict = dict(ref_pid=ref_pid, value=value)
-                if prop_dict:
-                    goods_properties.append(prop_dict)
-                    success_properties.append(propertie_name)
-        fail_properties = [prop_name for prop_name in base_props if prop_name not in success_properties]
+        # prop_maps = self.copy_pdd_sku_match.get_pdd_sku_matchs('taobao')
+        prop_maps = {}  # TODO 属性对应关系数据库化
+        choose_names, goods_properties, remove_ref_pids, process_pdd_prop_names = {}, [], [], [], []
+        base_prop_names = list(map(lambda x: list(jieba.cut(x)), base_props.keys()))
 
-        logger.info(
-            "PROCESS_PDD_PROPERTIES amount:{0} success:{1} fali:{2} fail_names:{3} choose_names:{4}".format(
-                len(base_props),
-                len(success_properties),
-                len(fail_properties),
-                "|".join(fail_properties),
-                "|".join(map(lambda x: x["name"], propertie_rules)),
+        ref_maps = []
+        for propertie_rule in propertie_rules:
+            ref_pid = propertie_rule["ref_pid"]
+            parent_ref_pids = [x["parent_ref_pid"] for x in propertie_rule.get("show_condition", [])]
+            ref_map = [[x, ref_pid] for x in parent_ref_pids]
+            ref_maps.extend(ref_map)
+
+        for propertie_rule in propertie_rules:
+            keys = ["name", "choose_max_num", "input_max_num", "ref_pid", "property_value_type", "is_sale", "required"]
+            src_pdd_prop_name, choose_max_num, input_max_num, ref_pid, prop_type, is_sale, required = [
+                propertie_rule[key] for key in keys
+            ]
+            # SKU相关的信息,直接跳过
+            if is_sale:
+                continue
+            # 属性是否可自定义
+            custom_mark = True if choose_max_num == 0 and input_max_num != 0 else False
+            # 寻找原属姓名和拼多多匹配的
+            # 考虑属性依赖的情况，多层属性每次匹配下。
+            pdd_prop_names = self._get_pdd_prop_names(propertie_rule, propertie_rules, ref_maps)
+            for pdd_prop_name in pdd_prop_names:
+                if pdd_prop_name in prop_maps:
+                    propertie_name = prop_maps[pdd_prop_name]
+                else:
+                    # 可以选择依赖的属性值
+                    pass_pdd_prop_names = [x for x in process_pdd_prop_names if pdd_prop_name in x]
+                    pass_pdd_prop_names = reduce(lambda x, y: x + y, pass_pdd_prop_names, [])
+                    filter_choose_names = [value for key, value in choose_names.items() if key not in pass_pdd_prop_names]
+                    propertie_name = self._get_match_prop_name(base_prop_names, pdd_prop_name, filter_choose_names)
+                    logger.info(
+                        "[PROP MATCH] src_name:%s dst_name:%s pre_choose_names:%s choosed_names%s filter_choose_names:%s",
+                        pdd_prop_name,
+                        propertie_name,
+                        base_prop_names,
+                        choose_names,
+                        filter_choose_names,
+                    )
+                if propertie_name:
+                    break
+            # 没找到合适的属性名
+            if not propertie_name:
+                if required:
+                    remove_ref_pids.append(ref_pid)
+                continue
+
+            choose_names[src_pdd_prop_name] = propertie_name
+            if len(pdd_prop_names) > 1:
+                process_pdd_prop_names.append(pdd_prop_names)
+            choose_values = propertie_rule.get("values", [])  # 可选项
+            src_propertie_value = base_props[propertie_name]
+            split_choose_values = list(map(lambda x: list(jieba.cut(x["value"])), choose_values))
+            propertie_value = self._get_match_prop_name(split_choose_values, src_propertie_value)
+            logger.info(
+                "[PROP VALUE MATCH] src_name:%s dst_name:%s pre_choose_names:%s",
+                src_propertie_value,
+                propertie_value,
+                split_choose_values,
             )
-        )
+            # 没找到合适的属性值
+            if not propertie_value and not custom_mark:
+                if required:
+                    remove_ref_pids.append(ref_pid)
+                continue
+
+            prop_dict = {}
+            choose_values = [x for x in choose_values if x["value"] == propertie_value]
+            if choose_values:
+                vid = choose_values[0]["vid"]
+                prop_dict = dict(ref_pid=ref_pid, vid=vid)
+            else:
+                if prop_type == 0:
+                    value = str(propertie_value)
+                    prop_dict = dict(ref_pid=ref_pid, value=value)
+                elif prop_type == 1:
+                    numbers = re.findall("\d+", str(propertie_value))
+                    if numbers:
+                        value = int(numbers[0])
+                        prop_dict = dict(ref_pid=ref_pid, value=value)
+            # 没有效的属性值
+            if not prop_dict:
+                if required:
+                    remove_ref_pids.append(ref_pid)
+                continue
+            goods_properties.append(prop_dict)
+        # 检查goods_properties
+        delect_ref_pids = []
+        for remove_ref_pid in remove_ref_pids:
+            delect_ref_pids.append(remove_ref_pid)
+            for ref_map in ref_maps:
+                if remove_ref_pid in ref_map:
+                    delect_ref_pids.extend(ref_map)
+        delect_ref_pids = list(set(delect_ref_pids))
+        goods_properties = [x for x in goods_properties if x["ref_pid"] not in delect_ref_pids]
+
         title_count = 60
         title = self._get_process_title(title, item_cut_set, title_count)
         pdd_submit.update(
@@ -342,21 +446,35 @@ class CopyService:
 
         pdd_submit.update(market_price=market_price, goods_properties=goods_properties)
         # 处理销售属性
+        # sku_maps = self.copy_pdd_sku_match.get_pdd_sku_matchs('taobao')
         sku_maps = {"颜色分类": "颜色"}  # TODO sku对应关系数据库化
         pdd_skus = self.pdd_get_spec_api.get_pdd_goods_spec(category_id)
         pdd_skus = {pdd_sku["parent_spec_name"]: pdd_sku["parent_spec_id"] for pdd_sku in pdd_skus}
-
+        pdd_spec_names = list(map(lambda x: list(jieba.cut(x)), pdd_skus.keys()))
         sku_props, sku_infos = self._combine_sku_props(sku_props, sku_infos)
-
-        spec_id_maps, sku_image_maps = {}, {}
+        spec_id_maps, sku_image_maps, choose_names = {}, {}, []
         for sku_prop in sku_props:
-            sku_prop_id, sku_prop_name, sku_prop_values = [sku_prop[key] for key in ["pid", "name", "values"]]
-            sku_prop_name = sku_maps.get(sku_prop_name, sku_prop_name)
+            sku_prop_id, src_sku_prop_name, sku_prop_values = [sku_prop[key] for key in ["pid", "name", "values"]]
+            if src_sku_prop_name in sku_maps:
+                sku_prop_name = sku_maps[src_sku_prop_name]
+            else:
+                sku_prop_name = self._get_match_prop_name(pdd_spec_names, src_sku_prop_name, choose_names)
+                logger.info(
+                    "[SKU MATCH]src_name:%s dst_name:%s pre_choose_names:%s choosed_names%s",
+                    src_sku_prop_name,
+                    sku_prop_name,
+                    pdd_spec_names,
+                    choose_names,
+                )
+                if not sku_prop_name:
+                    sku_prop_name = [x for x in pdd_skus.keys() if x not in choose_names][0]
+            choose_names.append(sku_prop_name)
             pdd_parent_id = pdd_skus[sku_prop_name]
             for sku_prop_value in sku_prop_values:
                 value_id = sku_prop_value["vid"]
                 value_name = sku_prop_value["name"]
                 value_image = sku_prop_value.get("image")
+                value_name = value_name[:18]
                 pdd_spec_id = self.pdd_get_spec_id_api.get_pdd_goods_spec_id(pdd_parent_id, value_name)
                 spec_id_key = ":".join(map(str, [sku_prop_id, value_id]))
                 spec_id_maps[spec_id_key] = pdd_spec_id
@@ -389,6 +507,7 @@ class CopyService:
             online_url = self.pdd_upload_image_feature_api.upload_pdd_goods_image_feature(image_url, image_width)
         except Exception as ex:
             online_url = None
+        image_url = image_url.split("_800x800")[0]
         return (image_url, online_url)
 
     def process_submit_by_upload_images(self, submit_dict, item_source):
@@ -411,7 +530,7 @@ class CopyService:
             process_urls = []
             for image_url in submit_dict[key]:
                 if image_url in image_maps:
-                    process_urls.append(image_url)
+                    process_urls.append(image_maps[image_url])
             submit_dict[key] = process_urls
 
         init_thumb_url = submit_dict["carousel_gallery"][0]
@@ -434,11 +553,7 @@ class CopyService:
 if __name__ == "__main__":
     sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
-    print(
-        copy_service.pdd_upload_image_single(
-            ("https://img.alicdn.com/imgextra/i2/3584334822/O1CN01CyiBRG1lUWW7f3oDQ_!!3584334822.jpg_800x800.jpg", 800)
-        )
-    )
+    # pdd_prop_names = self._get_pdd_prop_names(propertie_rule, propertie_rules, ref_maps)
     # print(copy_service.pdd_get_commit_status_api.get_pdd_goods_commit_status([70607709402]))
     # item_html = copy_service.get_taobao_item_api(625435033956)
     # print(copy_service.pdd_get_spec_api.get_pdd_goods_spec(8132))

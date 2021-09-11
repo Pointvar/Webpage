@@ -1,0 +1,17 @@
+version: 1
+disable_existing_loggers: false
+
+root:
+  level: INFO
+  handlers: [file]
+
+formatters:
+  verbose:
+    format: "%(asctime)s %(levelname)s (%(filename)s:%(lineno)s): %(message)s"
+
+handlers:
+  file:
+    class: logging.handlers.WatchedFileHandler
+    level: INFO
+    formatter: verbose
+    filename: /alidata1/logs/scripts/

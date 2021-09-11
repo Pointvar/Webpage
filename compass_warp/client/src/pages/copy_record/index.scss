@@ -5,6 +5,7 @@
   .ant-layout-header,
   .ant-layout-content,
   .ant-layout-footer {
+    padding: 0px 100px;
     min-width: 1200px;
   }
 }
@@ -12,9 +13,14 @@
 .ant-layout-content {
   margin-top: 24px;
   padding: 0px 50px;
+  .table_header_box {
+    .ant-form-item-label > label {
+      font-weight: 500;
+    }
+  }
   .table-area-box {
     .ant-table-wrapper {
-      margin-top: 12px;
+      margin-top: 24px;
     }
   }
 }
