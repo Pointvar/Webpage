@@ -1,7 +1,16 @@
 import axios from "axios";
 import { Modal } from "antd";
 import React from "react";
+import Cookies from "js-cookie";
+
+const csrftoken = Cookies.get("csrftoken");
+if (!csrftoken) {
+  Cookies.set("csrftoken", "kGwYOrb7Gh1bZa9oCe4DVbzfUhILmk1jgdzzNIhUDbtxepYVT431qrnRlsyqkFoP");
+}
+
 axios.defaults.headers["X-Requested-With"] = "XMLHttpRequest";
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 
 axios.interceptors.response.use(
   function (response) {

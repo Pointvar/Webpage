@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import jieba
-from datetime import datetime
+from datetime import datetime, timedelta
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 from compass_warp.compass_conf.set_env import set_path_env
@@ -64,12 +64,16 @@ def process_main():
         dst_num_iid, submit_id = copy_service.add_pdd_item(pdd_submit)
         logger.info("[Step 7] [Process] [AddItem] task_id:%s dst_num_iid:%s submit_id:%s", task_id, dst_num_iid, submit_id)
         # 复制完成后更新记录
-        update_dict = dict(dst_num_iid=dst_num_iid, submit_id=submit_id, status="#FINISH#", check_status="#PROCESS#")
+        # 留一点时间查，让平台审核
+        check_time, check_status = datetime.now() + timedelta(seconds=10), "#PROCESS#"
+        update_dict = dict(
+            dst_num_iid=dst_num_iid, submit_id=submit_id, status="#FINISH#", check_time=check_time, check_status=check_status
+        )
         copy_service.update_complex_task_by_params(in_id, update_dict)
         logger.info("[Step finally] [Finish] task_id:%s nick:%s ", task_id, nick)
     except Exception as ex:
         logger.exception("[Step finally] [Fail] task_id:%s nick:%s exception:%s", task_id, nick, ex)
-        exception_msg = str(ex)
+        exception_msg = repr(ex)
         update_dict = dict(status="#FAIL#", exception_msg=exception_msg)
         copy_service.update_complex_task_by_params(in_id, update_dict)
 

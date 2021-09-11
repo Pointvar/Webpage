@@ -156,7 +156,6 @@ const CopyTabProps = {
             </div>
           ),
         },
-
         {
           label: "拼单价格",
           name: ["price_set", "group_price"],

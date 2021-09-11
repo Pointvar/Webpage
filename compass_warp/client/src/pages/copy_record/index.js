@@ -143,7 +143,7 @@ const checkStatusProgress = (text, row) => {
     );
   }
   const fragment = content ? (
-    <Popover placement="top" content={content} trigger="hover">
+    <Popover placement="top" content={content} trigger="hover" overlayStyle={{ width: 400 }}>
       <Progress type="circle" percent={percent} status={status} width={40} />
       <div style={{ color }}>{formatStatus}</div>
     </Popover>
@@ -230,16 +230,14 @@ const columns = [
         if (row.check_status === "#FINISH#") {
           editUrl = `https://mms.pinduoduo.com/goods/goods_list/transfer?id=${row.dst_num_iid}`;
         } else if (row.check_status === "#FAIL#") {
-          editUrl = `https://mms.pinduoduo.com/goods/goods_return_detail?id=${row.dst_num_iid}`;
+          editUrl = `https://mms.pinduoduo.com/goods/goods_return_detail?id=${row.submit_id}`;
         }
       }
 
       const disabled = editUrl ? false : true;
       const fragment = (
         <a href={editUrl} target="_blank" rel="noreferrer">
-          <Button type="dashed" disabled={disabled}>
-            编辑商品
-          </Button>
+          <Button disabled={disabled}>编辑商品</Button>
         </a>
       );
       return fragment;
@@ -270,7 +268,7 @@ function CopyRecord() {
   }
   if (filterId) {
     complexTasks = complexTasks.filter((element) => {
-      return _.isEqual(element.src_num_iid, filterId) || _.isEqual(element.dst_num_iid, filterId);
+      return _.isEqual(element.src_num_iid.toString(), filterId) || _.isEqual(element.dst_num_iid.toString(), filterId);
     });
   }
   if (filterPlatform !== "#ALL#") {
@@ -338,7 +336,7 @@ function CopyRecord() {
   const filterCurrentStatus = _.filter(currentStatus, (element) => {
     return element !== "#FINISH#" || element !== "#FAIL#";
   });
-  if (!filterCurrentStatus) {
+  if (!filterCurrentStatus.length && loopTimes > 2) {
     delay = null;
   }
 

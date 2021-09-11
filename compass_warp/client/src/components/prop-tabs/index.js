@@ -149,23 +149,21 @@ function PropPriceSet(props) {
   return (
     <div className="prop-box">
       <Form.Item name={name} label={label}>
-        <div className="prop-element">
-          <Input.Group compact>
-            <span>{prefix}</span>
-            <Form.Item name={priceNames.time}>
-              <InputNumber min={80} max={120} formatter={(value) => `${value}%`} parser={(value) => value.replace("%", "")} />
-            </Form.Item>
-            <Form.Item name={priceNames.operator}>
-              <Select>
-                <Option value="#ADD#">加</Option>
-                <Option value="#SUB#">减</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item name={priceNames.offset}>
-              <InputNumber min={0} max={100} />
-            </Form.Item>
-          </Input.Group>
-        </div>
+        <Input.Group compact className="prop-element">
+          <span>{prefix}</span>
+          <Form.Item name={priceNames.time}>
+            <InputNumber min={80} max={120} formatter={(value) => `${value}%`} parser={(value) => value.replace("%", "")} />
+          </Form.Item>
+          <Form.Item name={priceNames.operator}>
+            <Select>
+              <Option value="#ADD#">加</Option>
+              <Option value="#SUB#">减</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name={priceNames.offset}>
+            <InputNumber min={0} max={100} />
+          </Form.Item>
+        </Input.Group>
       </Form.Item>
       {tips}
     </div>

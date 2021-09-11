@@ -339,7 +339,7 @@ class CopyService:
         propertie_rules = category_rule["goods_properties_rule"]["properties"]
         # prop_maps = self.copy_pdd_sku_match.get_pdd_sku_matchs('taobao')
         prop_maps = {}  # TODO 属性对应关系数据库化
-        choose_names, goods_properties, remove_ref_pids, process_pdd_prop_names = {}, [], [], [], []
+        choose_names, goods_properties, remove_ref_pids, process_pdd_prop_names = {}, [], [], []
         base_prop_names = list(map(lambda x: list(jieba.cut(x)), base_props.keys()))
 
         ref_maps = []
@@ -553,6 +553,8 @@ class CopyService:
 if __name__ == "__main__":
     sid, nick, platform, soft_code, source = "888530519", "", "pinduoduo", "kjsh", "test"
     copy_service = CopyService(sid, nick, platform, soft_code, source)
+    num_iid = 70923557795
+    print(copy_service.get_pdd_goods_commit_status([num_iid]))
     # pdd_prop_names = self._get_pdd_prop_names(propertie_rule, propertie_rules, ref_maps)
     # print(copy_service.pdd_get_commit_status_api.get_pdd_goods_commit_status([70607709402]))
     # item_html = copy_service.get_taobao_item_api(625435033956)
